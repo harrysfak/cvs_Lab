@@ -170,7 +170,7 @@ if __name__ == "__main__":
     
     try:
         manager = ZeroDataManager()
-        zero_info = manager.calculate_zero_count(100)
+        zero_info = manager.calculate_zero_count(300)
         print(f"Zero info: {zero_info}")
     except FileNotFoundError as e:
         print(f"Σημείωση: {e}")

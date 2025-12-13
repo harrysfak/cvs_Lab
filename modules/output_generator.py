@@ -199,24 +199,24 @@ def generate_output(df: pd.DataFrame, metadata: dict,
 if __name__ == "__main__":
     # Test του module
     print("Testing OutputGenerator...")
-    
+    times = 300
     # Δημιουργία mock data
     test_df = pd.DataFrame({
-        'Fat': ['3.5'] * 10,
-        'Protein': ['3.2'] * 10,
-        'Lactose': ['4.8'] * 10,
-        'FPD': ['0.520'] * 10,
-        'TS': [11.5] * 10,
-        'SNF': [8.7] * 10
+        'Fat': ['3.5'] * times,
+        'Protein': ['3.2'] * times,
+        'Lactose': ['4.8'] * times,
+        'FPD': ['0.520'] * times,
+        'TS': [11.5] * times,
+        'SNF': [8.7] * times
     })
     
     test_metadata = {
-        'sample_ids': [f"1234-1 {i}" for i in range(1, 11)],
-        'rep': [1] * 10,
-        'product': ['AIG NEWXX'] * 10,
-        'date': ['12/12/2024'] * 10,
-        'sample_times': [f"10:{i:02d}" for i in range(10)],
-        'remark': [''] * 10
+        'sample_ids': [f"1234-1 {i}" for i in range(1, times + 1)],
+        'rep': [1] * times,
+        'product': ['AIG NEWXX'] * times,
+        'date': ['12/12/2024'] * times,
+        'sample_times': [f"10:{i:02d}" for i in range(times)],
+        'remark': [''] * times
     }
     
     generator = OutputGenerator(test_df, test_metadata)

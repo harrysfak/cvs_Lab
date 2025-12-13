@@ -129,17 +129,28 @@ class DataProcessor:
             print(f"   Νέο σύνολο γραμμών: {rows_after}")
         
         return self.df
-    
+
     def _remove_column_after_aa(self):
-        """Διαγράφει τη στήλη αμέσως μετά το 'a/a' αν υπάρχει"""
+        """Διαγράφει τη στήλη αμέσως μετά το 'a/a' ΜΟΝΟ αν είναι άχρηστη."""
         cols = self.df.columns.tolist()
-        if 'a/a' in cols:
-            idx = cols.index('a/a')
-            if idx + 1 < len(cols):
-                col_to_delete = cols[idx + 1]
-                self.df = self.df.drop(columns=[col_to_delete])
-                print(f"Η στήλη '{col_to_delete}' διαγράφηκε.")
-    
+        if "a/a" not in cols:
+            return
+
+        idx = cols.index("a/a")
+        if idx + 1 >= len(cols):
+            return
+
+        col_to_delete = cols[idx + 1]
+
+        # ✅ Προστασία: ΜΗΝ σβήνεις χρήσιμες στήλες
+        protected = {"Fat", "Protein", "Lactose", "FPD", "freeze point", "proteine", "fat", "lactose"}
+        if col_to_delete.strip() in protected:
+            # Είναι χρήσιμη → μην την πειράξεις
+            return
+
+        self.df = self.df.drop(columns=[col_to_delete])
+        print(f"Η στήλη '{col_to_delete}' διαγράφηκε.")
+
     def _remove_unnecessary_columns(self):
         """Διαγράφει περιττές στήλες"""
         cols_to_delete = [col for col in config.COLS_TO_DELETE if col in self.df.columns]
@@ -302,14 +313,16 @@ if __name__ == "__main__":
     
     # Δημιουργία test data
     import pandas as pd
+
     test_df = pd.DataFrame({
-        'a/a': [1, 2, 3, 4, 5],
-        'Fat': [3.5, 0, 3.7, 0, 3.8],
-        'Protein': [3.2, 0, 3.4, 3.5, 3.6],
-        'Lactose': [4.8, 0, 5.0, 0, 5.1],
-        'freeze point': [0.520, 0.521, 0.522, 0.523, 0.524]
+        "a/a": [1, 2, 3, 4, 5],
+        "Unnamed: 1": ["", "", "", "", ""],  # άχρηστη
+        "Fat": [3.5, 0, 3.7, 0, 3.8],
+        "Protein": [3.2, 0, 3.4, 3.5, 3.6],
+        "Lactose": [4.8, 0, 5.0, 0, 5.1],
+        "freeze point": [0.520, 0.521, 0.522, 0.523, 0.524],
     })
-    
+
     print("\nΑρχικά δεδομένα:")
     print(test_df)
     

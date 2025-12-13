@@ -27,14 +27,14 @@ class MilkDataProcessorGUI:
     
     def __init__(self, root):
         self.root = root
-        self.root.title("Σύστημα Επεξεργασίας Δεδομένων Γάλακτος - Windows")
+        self.root.title("Smart CSV Lab Manager")
         self.root.geometry("1000x750")
         
         # Windows-specific: Center window
         self._center_window()
         
         # Set icon (optional - προσθέστε αν έχετε .ico)
-        # self.root.iconbitmap('icon.ico')
+        self.root.iconbitmap(config.APP_ICON)
         
         # Μεταβλητές
         self.excel_df = None
@@ -56,49 +56,50 @@ class MilkDataProcessorGUI:
         x = (self.root.winfo_screenwidth() // 2) - (width // 2)
         y = (self.root.winfo_screenheight() // 2) - (height // 2)
         self.root.geometry(f'{width}x{height}+{x}+{y}')
-    
+
     def _setup_ui(self):
         """Δημιουργία UI components"""
-        
+
         # Header με χρώμα
-        header_frame = tk.Frame(self.root, bg='#2c3e50', padx=10, pady=15)
+        header_frame = tk.Frame(self.root, bg=config.BG_COLORS, padx=10, pady=15)
         header_frame.pack(fill=tk.X)
-        
+
         title_label = tk.Label(
             header_frame,
-            text="🥛 Σύστημα Επεξεργασίας Δεδομένων Γάλακτος",
-            font=("Segoe UI", 18, "bold"),
-            bg='#2c3e50',
+            text="Smart CSV Lab Manager",
+            font=("Segoe UI", 40, "bold"),
+            bg=config.BG_COLORS,
             fg='white'
         )
         title_label.pack()
-        
+
         subtitle_label = tk.Label(
             header_frame,
             text="Windows Edition - v1.0",
-            font=("Segoe UI", 10),
-            bg='#2c3e50',
+            font=("Segoe UI", 20),
+            bg=config.BG_COLORS,
             fg='#ecf0f1'
+
         )
         subtitle_label.pack()
-        
+
         # Notebook για tabs
         style = ttk.Style()
         style.configure('TNotebook.Tab', padding=[20, 10])
-        
+
         self.notebook = ttk.Notebook(self.root)
         self.notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        
+
         # Tabs
         self._create_load_tab()
         self._create_settings_tab()
         self._create_process_tab()
         self._create_results_tab()
-        
+
         # Status bar με χρώμα
         status_frame = tk.Frame(self.root, bg='#34495e', height=30)
         status_frame.pack(side=tk.BOTTOM, fill=tk.X)
-        
+
         self.status_bar = tk.Label(
             status_frame,
             text="Έτοιμο",
@@ -106,25 +107,25 @@ class MilkDataProcessorGUI:
             bg='#34495e',
             fg='white',
             padx=10,
-            font=("Segoe UI", 9)
+            font=("Segoe UI",10)
         )
         self.status_bar.pack(fill=tk.X)
-    
+
     def _create_load_tab(self):
         """Tab για φόρτωση δεδομένων"""
         load_frame = ttk.Frame(self.notebook, padding="20")
         self.notebook.add(load_frame, text="📂 1. Φόρτωση Δεδομένων")
-        
+
         # File selection
         file_frame = ttk.LabelFrame(load_frame, text="Επιλογή Αρχείου", padding="15")
         file_frame.pack(fill=tk.X, pady=10)
-        
+
         ttk.Label(
             file_frame, 
             text="Αρ. Πρωτοκόλλου:",
             font=("Segoe UI", 10)
         ).grid(row=0, column=0, sticky=tk.W, pady=5)
-        
+
         self.protocol_entry = ttk.Entry(file_frame, width=30, font=("Consolas", 10))
         self.protocol_entry.grid(row=0, column=1, padx=10, pady=5)
         
