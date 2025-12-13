@@ -1,0 +1,224 @@
+"""
+Module για τη δημιουργία τελικού output και συγχώνευση δεδομένων
+"""
+import os
+import pandas as pd
+import numpy as np
+from typing import List
+import config
+
+
+class OutputGenerator:
+    """Κλάση για τη δημιουργία τελικού output"""
+    
+    def __init__(self, df: pd.DataFrame, metadata: dict):
+        """
+        Args:
+            df: Επεξεργασμένο DataFrame με δεδομένα
+            metadata: Dictionary με metadata (sample_ids, times, κλπ.)
+        """
+        self.df = df
+        self.metadata = metadata
+        self.filled_df = None
+        self.parts_path = config.PARTS_PATH
+    
+    def create_filled_dataframe(self) -> pd.DataFrame:
+        """
+        Δημιουργεί το πλήρες DataFrame με όλα τα δεδομένα
+        
+        Returns:
+            pd.DataFrame: Πλήρως συμπληρωμένο DataFrame
+        """
+        # Source - https://stackoverflow.com/a/30522778
+        # Posted by miriamsimone, modified by community
+        # Retrieved 2025-12-10, License - CC BY-SA 4.0
+        
+        self.filled_df = pd.DataFrame(
+            np.column_stack([
+                self.metadata['sample_ids'],
+                self.metadata['rep'],
+                self.metadata['product'],
+                self.df['Fat'],
+                self.df['Protein'],
+                self.df['Lactose'],
+                self.df['FPD'],
+                self.df['TS'],
+                self.df['SNF'],
+                self.metadata['date'],
+                self.metadata['sample_times'],
+                self.metadata['remark']
+            ]),
+            columns=config.TARGET_COLUMN_ORDER
+        )
+        
+        print(f"✅ Δημιουργήθηκε filled DataFrame με {len(self.filled_df)} γραμμές")
+        return self.filled_df
+    
+    def break_into_parts(self) -> List[pd.DataFrame]:
+        """
+        Χωρίζει το DataFrame σε parts των 87 γραμμών
+        
+        Returns:
+            List[pd.DataFrame]: Λίστα με DataFrame parts
+        """
+        if self.filled_df is None:
+            raise ValueError("Πρέπει να καλέσετε πρώτα create_filled_dataframe()")
+        
+        chunks = [
+            self.filled_df.iloc[i:i+config.BATCH_SIZE] 
+            for i in range(0, len(self.filled_df), config.BATCH_SIZE)
+        ]
+        
+        print(f"✅ Διαχωρισμός σε {len(chunks)} parts:")
+        for idx, chunk in enumerate(chunks, 1):
+            print(f"   Part {idx}: {len(chunk)} γραμμές")
+        
+        return chunks
+    
+    def save_parts_to_csv(self):
+        """Αποθηκεύει τα parts ως ξεχωριστά CSV αρχεία"""
+        if self.filled_df is None:
+            raise ValueError("Πρέπει να καλέσετε πρώτα create_filled_dataframe()")
+        
+        # Δημιουργία φακέλου parts
+        os.makedirs(self.parts_path, exist_ok=True)
+        
+        # Διαχωρισμός και αποθήκευση
+        chunks = self.break_into_parts()
+        
+        for idx, chunk in enumerate(chunks, 1):
+            part_file = os.path.join(self.parts_path, f"p{idx}.csv")
+            chunk.to_csv(part_file, index=False)
+        
+        print(f"✅ Αποθηκεύτηκαν {len(chunks)} part files στο {self.parts_path}")
+    
+    def get_filled_dataframe(self) -> pd.DataFrame:
+        """Επιστρέφει το filled DataFrame"""
+        return self.filled_df
+
+
+class FinalOutputAssembler:
+    """Κλάση για τη συναρμολόγηση τελικού output με zero data"""
+    
+    def __init__(self, parts_path: str = None, output_path: str = None):
+        self.parts_path = parts_path or config.PARTS_PATH
+        self.output_path = output_path or config.FINAL_OUTPUT_PATH
+    
+    def assemble_final_csv(self, zero_dfs: List[pd.DataFrame]):
+        """
+        Συναρμολογεί το τελικό CSV με parts και zero blocks
+        
+        Args:
+            zero_dfs: Λίστα με zero DataFrames
+        """
+        # Εύρεση part files
+        part_files = [
+            f for f in os.listdir(self.parts_path)
+            if f.startswith("p") and f.endswith(".csv")
+        ]
+        
+        # Ταξινόμηση
+        part_files = sorted(part_files, key=self._part_key)
+        
+        print(f"📄 Θα χρησιμοποιηθούν {len(part_files)} part files:")
+        for f in part_files:
+            print(f"   - {f}")
+        
+        # Συναρμολόγηση
+        first_file = True
+        zero_block_index = 0
+        
+        with open(self.output_path, "w", encoding="utf-8") as fout:
+            for i, fname in enumerate(part_files):
+                part_path = os.path.join(self.parts_path, fname)
+                
+                # Γράφουμε το part
+                with open(part_path, "r", encoding="utf-8") as fin:
+                    lines = fin.readlines()
+                
+                if first_file:
+                    fout.writelines(lines)
+                    first_file = False
+                else:
+                    fout.writelines(lines[1:])  # Χωρίς header
+                
+                # Προσθήκη zero block (αν δεν είναι το τελευταίο part)
+                if i < len(part_files) - 1:
+                    if zero_block_index < len(zero_dfs):
+                        zero_df = zero_dfs[zero_block_index]
+                        zero_csv_string = zero_df.to_csv(header=False, index=False)
+                        fout.write(zero_csv_string)
+                        zero_block_index += 1
+                    else:
+                        print(f"⚠️  Προειδοποίηση: Δεν υπάρχουν αρκετά zero blocks")
+        
+        print(f"✅ Τελικό αρχείο αποθηκεύτηκε: {self.output_path}")
+        print(f"📊 Συνολικές γραμμές: {self._count_lines(self.output_path)}")
+    
+    @staticmethod
+    def _part_key(name: str):
+        """Helper για σωστή ταξινόμηση part files"""
+        base = name[1:-4]  # Αφαίρεση 'p' και '.csv'
+        try:
+            return int(base)
+        except ValueError:
+            return base
+    
+    @staticmethod
+    def _count_lines(filepath: str) -> int:
+        """Μετρά τις γραμμές ενός αρχείου"""
+        with open(filepath, 'r', encoding='utf-8') as f:
+            return sum(1 for _ in f)
+
+
+def generate_output(df: pd.DataFrame, metadata: dict, 
+                   zero_dfs: List[pd.DataFrame]) -> str:
+    """
+    Wrapper function για πλήρη δημιουργία output
+    
+    Args:
+        df: Επεξεργασμένο DataFrame
+        metadata: Dictionary με metadata
+        zero_dfs: Λίστα με zero DataFrames
+        
+    Returns:
+        str: Διαδρομή τελικού αρχείου
+    """
+    # Δημιουργία filled DataFrame
+    generator = OutputGenerator(df, metadata)
+    generator.create_filled_dataframe()
+    generator.save_parts_to_csv()
+    
+    # Συναρμολόγηση τελικού output
+    assembler = FinalOutputAssembler()
+    assembler.assemble_final_csv(zero_dfs)
+    
+    return assembler.output_path
+
+
+if __name__ == "__main__":
+    # Test του module
+    print("Testing OutputGenerator...")
+    
+    # Δημιουργία mock data
+    test_df = pd.DataFrame({
+        'Fat': ['3.5'] * 10,
+        'Protein': ['3.2'] * 10,
+        'Lactose': ['4.8'] * 10,
+        'FPD': ['0.520'] * 10,
+        'TS': [11.5] * 10,
+        'SNF': [8.7] * 10
+    })
+    
+    test_metadata = {
+        'sample_ids': [f"1234-1 {i}" for i in range(1, 11)],
+        'rep': [1] * 10,
+        'product': ['AIG NEWXX'] * 10,
+        'date': ['12/12/2024'] * 10,
+        'sample_times': [f"10:{i:02d}" for i in range(10)],
+        'remark': [''] * 10
+    }
+    
+    generator = OutputGenerator(test_df, test_metadata)
+    filled = generator.create_filled_dataframe()
+    print(f"Created filled DataFrame with {len(filled)} rows")
