@@ -5,6 +5,8 @@ import os
 import pandas as pd
 from typing import List
 import config
+from modules.zero_loader import ensure_zero_file
+
 
 
 class ZeroDataManager:
@@ -26,8 +28,10 @@ class ZeroDataManager:
             pd.DataFrame: Zero DataFrame
         """
         if not os.path.exists(self.zero_path):
-            raise FileNotFoundError(f"Το αρχείο zero δεν βρέθηκε: {self.zero_path}")
-        
+            print(f"Το αρχείο zero δεν βρέθηκε: {self.zero_path}")
+            print("Αυτόματη λήψη....")
+            zero_path = ensure_zero_file()
+
         # Φόρτωση και καθαρισμός
         self.zero_df = pd.read_excel(self.zero_path).fillna("")
         

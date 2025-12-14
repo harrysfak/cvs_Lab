@@ -6,9 +6,12 @@ import os
 # ΒΑΣΙΚΕΣ ΔΙΑΔΡΟΜΕΣ - Windows Paths
 # ============================================================
 
-BASE_PATH = r"C:\Users\mpamp\Υπολογιστής\csv_Lab"
-
-APP_ICON = "icons8-test-tube-94.ico"
+BASE_PATH = r"C:\Users\mpamp\Υπολογιστής\csv_Laab"
+ZERO_REMOTE_URL = (
+    "https://qhlpulnlyvarhmckbelq.supabase.co/"
+    "storage/v1/object/public/zero/zero.xlsx"
+)
+APP_ICON = "icon2.ico"
 
 # Υποφάκελοι
 CSV_PATH = os.path.join(BASE_PATH, "CSV")
