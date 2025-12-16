@@ -9,6 +9,7 @@ import os
 import sys
 from datetime import datetime
 import subprocess
+import random
 
 # Προσθήκη του parent directory στο path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -174,14 +175,15 @@ class MilkDataProcessorGUI:
             row=0, column=0, sticky=tk.W, pady=5
         )
         self.date_entry = ttk.Entry(date_frame, width=20, font=("Consolas", 10))
+        self.date_entry.insert(-1,  f"")
         self.date_entry.grid(row=0, column=1, padx=10, pady=5)
-        
+
         ttk.Button(
             date_frame,
-            text="📆 Σημερινή Ημερομηνία",
-            command=self._set_today
+            text="📆 AUTO - Ημερομηνία",
+            command=self._set_analysis_day
         ).grid(row=0, column=2, padx=5)
-        
+
         # Time settings
         time_frame = ttk.LabelFrame(settings_frame, text="🕐 Αρχική Ώρα", padding="15")
         time_frame.pack(fill=tk.X, pady=10)
@@ -189,10 +191,17 @@ class MilkDataProcessorGUI:
         ttk.Label(time_frame, text="Ώρα (HH:MM):", font=("Segoe UI", 10)).grid(
             row=0, column=0, sticky=tk.W, pady=5
         )
+
         self.time_entry = ttk.Entry(time_frame, width=20, font=("Consolas", 10))
         self.time_entry.insert(0, config.DEFAULT_TIME)
         self.time_entry.grid(row=0, column=1, padx=10, pady=5)
-        
+
+        ttk.Button(
+            time_frame,
+            text="🕐 Random Hour (10:00 - 12:00)",
+            command=self._set_random_hour
+        ).grid(row=0, column=2, padx=5)
+
         # Product settings
         product_frame = ttk.LabelFrame(settings_frame, text="📦 Προϊόν", padding="15")
         product_frame.pack(fill=tk.X, pady=10)
@@ -436,14 +445,33 @@ class MilkDataProcessorGUI:
         self.file_info_text.delete(1.0, tk.END)
         self.file_info_text.insert(1.0, info)
         self.file_info_text.config(state=tk.DISABLED)
-    
-    def _set_today(self):
-        """Ορισμός σημερινής ημερομηνίας"""
-        today = datetime.now().strftime("%d-%m")
+
+    def _set_analysis_day(self):
+        if not self.csv_first_4 or len(self.csv_first_4) < 4:
+            messagebox.showwarning("Προειδοποίηση", "Δεν υπάρχει έγκυρος Αρ. Πρωτοκολλου (π.χ. 10102010-10)")
+            return
+
+        anal_day = f"{self.csv_first_4[0:2]}-{self.csv_first_4[2:4]}"
         self.date_entry.delete(0, tk.END)
-        self.date_entry.insert(0, today)
-        self._log(f"📅 Ημερομηνία: {today}")
-    
+        self.date_entry.insert(0, anal_day)
+        self._log(f"📅 Ημερομηνία: {anal_day}")
+
+    import random
+
+    def _set_random_hour(self):
+        """
+        Θέτει τυχαία ώρα μεταξύ 10:00 και 12:00
+        """
+        hour = random.randint(10, 11)  # 10 ή 11
+        minute = random.randint(0, 59)  # 00–59
+
+        random_time = f"{hour:02d}:{minute:02d}"
+
+        self.time_entry.delete(0, tk.END)
+        self.time_entry.insert(0, random_time)
+
+        self._log(f"🕐 Random ώρα: {random_time}")
+
     def _start_processing(self):
         """Έναρξη επεξεργασίας σε ξεχωριστό thread"""
         if self.excel_df is None:
