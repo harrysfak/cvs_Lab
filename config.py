@@ -31,7 +31,7 @@ FOUR_DECIMAL_COLS = ["FPD"]
 COLS_TO_DELETE = ["PH", "syal", "som cells", "water", "omx", "antibiotics"]
 
 # Αφαίρεση γραμμών με μηδενικά nutrients
-DROP_ZERO_NUTRIENTS = True  # Αν True, αφαιρούνται γραμμές με Fat=Protein=Lactose=0
+DROP_ZERO_NUTRIENTS = True
 
 # Μετονομασίες στηλών
 COLUMN_RENAMES = {
@@ -45,9 +45,9 @@ COLUMN_RENAMES = {
 # ΠΑΡΑΜΕΤΡΟΙ ΧΡΟΝΙΣΜΟΥ
 # ============================================================
 
-BATCH_SIZE = 87                 # Δείγματα ανά batch
-T_SAMPLE_INCREMENT = 43         # Δευτερόλεπτα μεταξύ δειγμάτων
-T_ZERO_INCREMENT = 19           # Δευτερόλεπτα για zero calibration
+BATCH_SIZE = 88
+T_SAMPLE_INCREMENT = 43
+T_ZERO_INCREMENT = 19
 ZERO_BLOCK_ROWS = 8            # Γραμμές ανά zero block
 ZERO_ROW_INDEX = [1, 2, 3, 4, 5, 6, 7, 9]  # Indices για update timestamps
 
@@ -107,7 +107,7 @@ def create_directory_structure():
     print("\nΔημιουργία δομής φακέλων...")
     
     directories = [
-        BASE_PATH,
+        BASE_PATH ,
         CSV_PATH,
         PARTS_PATH,
         os.path.dirname(ZERO_PATH)
