@@ -4,8 +4,13 @@ Module για τη διαχείριση zero calibration data
 import os
 import pandas as pd
 from typing import List
-import config
-from modules.zero_loader import ensure_zero_file
+# Import config με fallback
+try:
+    from . import config
+    from .zero_loader import ensure_zero_file
+except ImportError:
+    import config
+    from modules.zero_loader import ensure_zero_file
 
 
 

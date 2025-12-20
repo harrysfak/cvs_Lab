@@ -1,6 +1,10 @@
 import os
 import requests
-import config
+# Import config με fallback
+try:
+    from . import config
+except ImportError:
+    import config
 
 
 def ensure_zero_file():

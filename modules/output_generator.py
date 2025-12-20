@@ -5,7 +5,11 @@ import os
 import pandas as pd
 import numpy as np
 from typing import List
-import config
+# Import config με fallback
+try:
+    from . import config
+except ImportError:
+    import config
 
 
 class OutputGenerator:
