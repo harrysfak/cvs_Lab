@@ -4,7 +4,11 @@ Module για τη διαχείριση χρονικών δεδομένων κα
 import datetime
 import random
 from typing import List, Tuple
-import config
+# Import config με fallback
+try:
+    from . import config
+except ImportError:
+    import config
 
 
 class TimeHandler:
