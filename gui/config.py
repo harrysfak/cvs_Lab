@@ -14,7 +14,7 @@ ZERO_REMOTE_URL = (
 APP_ICON = "icon2.ico"
 
 # Υποφάκελοι
-CSV_PATH = BASE_PATH
+CSV_PATH = os.path.join(BASE_PATH, "CSV")
 PARTS_PATH = os.path.join(CSV_PATH, "parts")
 ZERO_PATH = os.path.join(CSV_PATH, "zero", "zero.xlsx")
 FINAL_OUTPUT_PATH = os.path.join(CSV_PATH, "final.csv")

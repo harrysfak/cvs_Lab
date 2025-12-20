@@ -22,8 +22,7 @@ class DataLoader:
     
     def __init__(self, base_path: str = None):
         self.base_path = base_path or config.BASE_PATH
-        self.csv_path = config.CSV_PATH
-    
+
     def get_user_file(self) -> Tuple[pd.DataFrame, str, str]:
         """
         Ζητά από το χρήστη τον αριθμό πρωτοκόλλου και φορτώνει το αντίστοιχο αρχείο
@@ -57,7 +56,7 @@ class DataLoader:
                 csv_first_4 = user_excel[:4]
                 
                 # Δημιουργία path αρχείου
-                excel_file = os.path.join(self.csv_path, f"{user_excel}.xls")
+                excel_file = os.path.abspath(f"{user_excel}.xls")
                 
                 # Έλεγχος αν υπάρχει το αρχείο
                 if not os.path.exists(excel_file):
@@ -83,10 +82,10 @@ class DataLoader:
                 continue
     
     def _list_available_files(self):
-        """Εμφανίζει τα διαθέσιμα αρχεία στον φάκελο CSV"""
-        if os.path.exists(self.csv_path):
+        """Εμφανίζει τα διαθέσιμα αρχεία στον BASE_PATH"""
+        if os.path.exists(self.base_path):
             available_files = [
-                f for f in os.listdir(self.csv_path) 
+                f for f in os.listdir(self.base_path)
                 if f.endswith(('.xls', '.xlsx'))
             ]
             if available_files:
@@ -97,9 +96,9 @@ class DataLoader:
                     print(f"  ... και {len(available_files) - 10} ακόμα αρχεία")
             else:
                 print("❌ Δεν βρέθηκαν αρχεία .xls ή .xlsx στον φάκελο.")
-                print(f"   Τοποθετήστε τα αρχεία σας στο: {self.csv_path}")
+                print(f"   Τοποθετήστε τα αρχεία σας στο: {self.base_path}")
         else:
-            print(f"❌ Ο φάκελος '{self.csv_path}' δεν βρέθηκε.")
+            print(f"❌ Ο φάκελος '{self.base_path}' δεν βρέθηκε.")
             print(f"   Δημιουργήστε τον φάκελο ή ελέγξτε το config.py")
 
 

@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from modules.data_loader import load_data
 from modules.data_processor import process_data
 from modules.time_handler import generate_time_metadata
-from modules.zero_data_manager import prepare_zero_data
+from modules.zero_manager import prepare_zero_data
 from modules.output_generator import generate_output
 
 

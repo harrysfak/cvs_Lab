@@ -48,7 +48,9 @@ class DataProcessor:
         
         # Μετονομασίες στηλών
         self.df = self.df.rename(columns=config.COLUMN_RENAMES)
-        
+        dupes = self.df.columns[self.df.columns.duplicated()].tolist()
+        print("DUPLICATE COLS:", dupes)
+
         print(f"✅ Αρχικό filtering ολοκληρώθηκε. Σύνολο γραμμών: {len(self.df)}")
         return self.df
     

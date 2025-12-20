@@ -9,8 +9,6 @@ import os
 import sys
 from datetime import datetime
 import subprocess
-import json
-from pathlib import Path
 import random
 
 # Προσθήκη του parent directory στο path
@@ -22,496 +20,14 @@ from modules.data_processor import process_data
 from modules.time_handler import TimeHandler, MetadataGenerator
 from modules.zero_manager import prepare_zero_data
 from modules.output_generator import generate_output
+from modules.missing_row import MissingRowHandler
+from gui.missing_aa_dialog import ask_values_for_missing_aa
 import config
+from gui.telemetry import UsageTelemetry
+from gui.config_edit import ConfigEditor
+from gui.stats_wind import UsageStatsWindow
+from gui.set_wind import SettingsWindow
 
-
-class UsageTelemetry:
-    """Κλάση για tracking usage statistics (local only - για maintenance)"""
-
-    def __init__(self):
-        self.telemetry_file = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            'usage_stats.json'
-        )
-        self.stats = self._load_stats()
-
-    def _load_stats(self):
-        """Φορτώνει τα statistics από το αρχείο"""
-        if os.path.exists(self.telemetry_file):
-            try:
-                with open(self.telemetry_file, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-            except:
-                return self._create_default_stats()
-        return self._create_default_stats()
-
-    def _create_default_stats(self):
-        """Δημιουργεί default structure"""
-        return {
-            'total_files_processed': 0,
-            'total_sessions': 0,
-            'last_used': None,
-            'first_used': datetime.now().isoformat(),
-            'processing_history': [],
-            'errors': [],
-            'app_version': 'v1.3'
-        }
-
-    def _save_stats(self):
-        """Αποθηκεύει τα statistics"""
-        try:
-            with open(self.telemetry_file, 'w', encoding='utf-8') as f:
-                json.dump(self.stats, f, indent=4)
-        except Exception as e:
-            print(f"Warning: Could not save telemetry: {e}")
-
-    def record_session_start(self):
-        """Καταγράφει έναρξη session"""
-        self.stats['total_sessions'] += 1
-        self.stats['last_used'] = datetime.now().isoformat()
-        self._save_stats()
-
-    def record_file_processed(self, filename, samples_count, duration_seconds=None):
-        """Καταγράφει επεξεργασία αρχείου"""
-        self.stats['total_files_processed'] += 1
-
-        record = {
-            'timestamp': datetime.now().isoformat(),
-            'filename': filename,
-            'samples': samples_count,
-            'duration_sec': duration_seconds
-        }
-
-        self.stats['processing_history'].append(record)
-
-        # Keep only last 100 records
-        if len(self.stats['processing_history']) > 100:
-            self.stats['processing_history'] = self.stats['processing_history'][-100:]
-
-        self._save_stats()
-
-    def record_error(self, error_message):
-        """Καταγράφει σφάλμα"""
-        error_record = {
-            'timestamp': datetime.now().isoformat(),
-            'error': str(error_message)[:200]  # Limit size
-        }
-
-        self.stats['errors'].append(error_record)
-
-        # Keep only last 50 errors
-        if len(self.stats['errors']) > 50:
-            self.stats['errors'] = self.stats['errors'][-50:]
-
-        self._save_stats()
-
-    def get_summary(self):
-        """Επιστρέφει summary statistics"""
-        today = datetime.now().date()
-
-        # Count today's files
-        today_files = sum(
-            1 for record in self.stats['processing_history']
-            if datetime.fromisoformat(record['timestamp']).date() == today
-        )
-
-        # Count this week's files
-        from datetime import timedelta
-        week_ago = today - timedelta(days=7)
-        week_files = sum(
-            1 for record in self.stats['processing_history']
-            if datetime.fromisoformat(record['timestamp']).date() >= week_ago
-        )
-
-        return {
-            'total_files': self.stats['total_files_processed'],
-            'total_sessions': self.stats['total_sessions'],
-            'today_files': today_files,
-            'week_files': week_files,
-            'last_used': self.stats['last_used'],
-            'first_used': self.stats['first_used'],
-            'recent_errors': len(self.stats['errors'])
-        }
-
-
-class ConfigEditor:
-    """Κλάση για επεξεργασία του config.py"""
-
-    def __init__(self):
-        self.config_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            'config.py'
-        )
-        self.config_values = {}
-        self.load_config()
-
-    def load_config(self):
-        """Φορτώνει τις τρέχουσες τιμές από το config"""
-        import importlib
-        importlib.reload(config)
-
-        self.config_values = {
-            'BASE_PATH': getattr(config, 'BASE_PATH', ''),
-            'BATCH_SIZE': getattr(config, 'BATCH_SIZE', 87),
-            'T_SAMPLE_INCREMENT': getattr(config, 'T_SAMPLE_INCREMENT', 43),
-            'T_ZERO_INCREMENT': getattr(config, 'T_ZERO_INCREMENT', 19),
-            'DEFAULT_PRODUCT': getattr(config, 'DEFAULT_PRODUCT', 'AIG NEWXX'),
-            'DEFAULT_TIME': getattr(config, 'DEFAULT_TIME', '11:00'),
-            'DEFAULT_REP': getattr(config, 'DEFAULT_REP', 1),
-            'DROP_ZERO_NUTRIENTS': getattr(config, 'DROP_ZERO_NUTRIENTS', True),
-        }
-
-    def save_config(self, new_values):
-        """Αποθηκεύει τις νέες τιμές στο config.py"""
-        try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
-                lines = f.readlines()
-
-            new_lines = []
-            for line in lines:
-                updated = False
-
-                if line.strip().startswith('BASE_PATH'):
-                    new_lines.append(f'BASE_PATH = r"{new_values["BASE_PATH"]}"\n')
-                    updated = True
-                elif line.strip().startswith('BATCH_SIZE'):
-                    new_lines.append(f'BATCH_SIZE = {new_values["BATCH_SIZE"]}\n')
-                    updated = True
-                elif line.strip().startswith('T_SAMPLE_INCREMENT'):
-                    new_lines.append(f'T_SAMPLE_INCREMENT = {new_values["T_SAMPLE_INCREMENT"]}\n')
-                    updated = True
-                elif line.strip().startswith('T_ZERO_INCREMENT'):
-                    new_lines.append(f'T_ZERO_INCREMENT = {new_values["T_ZERO_INCREMENT"]}\n')
-                    updated = True
-                elif line.strip().startswith('DEFAULT_PRODUCT'):
-                    new_lines.append(f'DEFAULT_PRODUCT = "{new_values["DEFAULT_PRODUCT"]}"\n')
-                    updated = True
-                elif line.strip().startswith('DEFAULT_TIME'):
-                    new_lines.append(f'DEFAULT_TIME = "{new_values["DEFAULT_TIME"]}"\n')
-                    updated = True
-                elif line.strip().startswith('DEFAULT_REP'):
-                    new_lines.append(f'DEFAULT_REP = {new_values["DEFAULT_REP"]}\n')
-                    updated = True
-                elif line.strip().startswith('DROP_ZERO_NUTRIENTS'):
-                    new_lines.append(f'DROP_ZERO_NUTRIENTS = {new_values["DROP_ZERO_NUTRIENTS"]}\n')
-                    updated = True
-
-                if not updated:
-                    new_lines.append(line)
-
-            with open(self.config_path, 'w', encoding='utf-8') as f:
-                f.writelines(new_lines)
-
-            return True
-        except Exception as e:
-            print(f"Error saving config: {e}")
-            return False
-
-
-class SettingsWindow:
-    """Παράθυρο για App Settings (Popup)"""
-
-    def __init__(self, parent, config_editor):
-        self.window = tk.Toplevel(parent)
-        self.window.title("Ρυθμίσεις Εφαρμογής")
-        self.window.geometry("700x650")
-        self.window.transient(parent)
-        self.window.grab_set()
-
-        self.config_editor = config_editor
-        self.config_editor.load_config()
-
-        self._setup_ui()
-        self._center_window()
-
-    def _center_window(self):
-        """Κεντράρει το παράθυρο"""
-        self.window.update_idletasks()
-        width = self.window.winfo_width()
-        height = self.window.winfo_height()
-        x = (self.window.winfo_screenwidth() // 2) - (width // 2)
-        y = (self.window.winfo_screenheight() // 2) - (height // 2)
-        self.window.geometry(f'{width}x{height}+{x}+{y}')
-
-    def _setup_ui(self):
-        """Δημιουργία UI"""
-        # Header
-        header = tk.Frame(self.window, bg='#3498db', padx=15, pady=10)
-        header.pack(fill=tk.X)
-
-        tk.Label(
-            header,
-            text="⚙️ Ρυθμίσεις Εφαρμογής",
-            font=("Segoe UI", 14, "bold"),
-            bg='#3498db',
-            fg='white'
-        ).pack(anchor=tk.W)
-
-        tk.Label(
-            header,
-            text="Επεξεργασία config.",
-            font=("Segoe UI", 9),
-            bg='#3498db',
-            fg='white'
-        ).pack(anchor=tk.W)
-
-        # Main container με scrollbar
-        main_frame = ttk.Frame(self.window, padding="20")
-        main_frame.pack(fill=tk.BOTH, expand=True)
-
-        # === PATHS ===
-        paths_frame = ttk.LabelFrame(main_frame, text="📁 Διαδρομές", padding="10")
-        paths_frame.pack(fill=tk.X, pady=5)
-
-        ttk.Label(paths_frame, text="__Base__ Φάκελος Αναζήτησης:").grid(row=0, column=0, sticky=tk.W, pady=5)
-        self.base_path_var = tk.StringVar(value=self.config_editor.config_values['BASE_PATH'])
-        ttk.Entry(paths_frame, textvariable=self.base_path_var, width=45).grid(
-            row=0, column=1, padx=5, pady=5
-        )
-        ttk.Button(paths_frame, text="📂", command=self._browse_path, width=3).grid(
-            row=0, column=2
-        )
-
-        # === PROCESSING ===
-        proc_frame = ttk.LabelFrame(main_frame, text="⚙️ Παράμετροι", padding="10")
-        proc_frame.pack(fill=tk.X, pady=5)
-
-        ttk.Label(proc_frame, text="Zero Batch :").grid(row=0, column=0, sticky=tk.W, pady=3)
-        self.batch_size_var = tk.IntVar(value=self.config_editor.config_values['BATCH_SIZE'])
-        ttk.Spinbox(proc_frame, from_=1, to=200, textvariable=self.batch_size_var, width=15).grid(
-            row=0, column=1, sticky=tk.W, padx=5
-        )
-
-        ttk.Label(proc_frame, text="Δευτερόλεπτα ανά δείγμα:").grid(row=1, column=0, sticky=tk.W, pady=3)
-        self.t_sample_var = tk.IntVar(value=self.config_editor.config_values['T_SAMPLE_INCREMENT'])
-        ttk.Spinbox(proc_frame, from_=1, to=300, textvariable=self.t_sample_var, width=15).grid(
-            row=1, column=1, sticky=tk.W, padx=5
-        )
-
-        ttk.Label(proc_frame, text="Δευτερόλεπτα ανά Zero:").grid(row=2, column=0, sticky=tk.W, pady=3)
-        self.t_zero_var = tk.IntVar(value=self.config_editor.config_values['T_ZERO_INCREMENT'])
-        ttk.Spinbox(proc_frame, from_=1, to=300, textvariable=self.t_zero_var, width=15).grid(
-            row=2, column=1, sticky=tk.W, padx=5
-        )
-
-        # === DEFAULTS ===
-        defaults_frame = ttk.LabelFrame(main_frame, text="📋 Προεπιλογές", padding="10")
-        defaults_frame.pack(fill=tk.X, pady=5)
-
-        ttk.Label(defaults_frame, text="DEFAULT_PRODUCT:").grid(row=0, column=0, sticky=tk.W, pady=3)
-        self.default_product_var = tk.StringVar(value=self.config_editor.config_values['DEFAULT_PRODUCT'])
-        ttk.Entry(defaults_frame, textvariable=self.default_product_var, width=30).grid(
-            row=0, column=1, sticky=tk.W, padx=5
-        )
-
-        ttk.Label(defaults_frame, text="DEFAULT_TIME:").grid(row=1, column=0, sticky=tk.W, pady=3)
-        self.default_time_var = tk.StringVar(value=self.config_editor.config_values['DEFAULT_TIME'])
-        ttk.Entry(defaults_frame, textvariable=self.default_time_var, width=15).grid(
-            row=1, column=1, sticky=tk.W, padx=5
-        )
-
-        ttk.Label(defaults_frame, text="DEFAULT_REP:").grid(row=2, column=0, sticky=tk.W, pady=3)
-        self.default_rep_var = tk.IntVar(value=self.config_editor.config_values['DEFAULT_REP'])
-
-
-        # === FEATURES ===
-        features_frame = ttk.LabelFrame(main_frame, text="✨ Features", padding="10")
-        features_frame.pack(fill=tk.X, pady=5)
-
-        self.drop_zero_var = tk.BooleanVar(
-            value=self.config_editor.config_values['DROP_ZERO_NUTRIENTS']
-        )
-        ttk.Checkbutton(
-            features_frame,
-            text="DROP_ZERO_NUTRIENTS (Αφαίρεση γραμμών με Fat=Protein=Lactose=0)",
-            variable=self.drop_zero_var
-        ).pack(anchor=tk.W, pady=3)
-
-        # === BUTTONS ===
-        button_frame = ttk.Frame(main_frame)
-        button_frame.pack(fill=tk.X, pady=15)
-
-        ttk.Button(
-            button_frame,
-            text="💾 Αποθήκευση & Επανεκκίνηση",
-            command=self._save_and_restart
-        ).pack(side=tk.LEFT, padx=5)
-
-        ttk.Button(
-            button_frame,
-            text="❌ Ακύρωση",
-            command=self.window.destroy
-        ).pack(side=tk.LEFT, padx=5)
-
-        ttk.Button(
-            button_frame,
-            text="🔄 Επαναφορά",
-            command=self._reload
-        ).pack(side=tk.LEFT, padx=5)
-
-    def _browse_path(self):
-        """Browse για path"""
-        folder = filedialog.askdirectory(
-            title="Επιλογή BASE_PATH",
-            initialdir=self.base_path_var.get() or os.path.expanduser("~")
-        )
-        if folder:
-            self.base_path_var.set(folder)
-
-    def _reload(self):
-        """Επαναφορά τιμών"""
-        self.config_editor.load_config()
-        self.base_path_var.set(self.config_editor.config_values['BASE_PATH'])
-        self.batch_size_var.set(self.config_editor.config_values['BATCH_SIZE'])
-        self.t_sample_var.set(self.config_editor.config_values['T_SAMPLE_INCREMENT'])
-        self.t_zero_var.set(self.config_editor.config_values['T_ZERO_INCREMENT'])
-        self.default_product_var.set(self.config_editor.config_values['DEFAULT_PRODUCT'])
-        self.default_time_var.set(self.config_editor.config_values['DEFAULT_TIME'])
-        self.default_rep_var.set(self.config_editor.config_values['DEFAULT_REP'])
-        self.drop_zero_var.set(self.config_editor.config_values['DROP_ZERO_NUTRIENTS'])
-
-        messagebox.showinfo("Επιτυχία", "Οι ρυθμίσεις επαναφορτώθηκαν!")
-
-    def _save_and_restart(self):
-        """Αποθήκευση και επανεκκίνηση"""
-        # Validation
-        try:
-            datetime.strptime(self.default_time_var.get(), "%H:%M")
-        except ValueError:
-            messagebox.showerror("Σφάλμα", "Μη έγκυρη μορφή ώρας! Χρησιμοποιήστε HH:MM")
-            return
-
-        if not self.base_path_var.get().strip():
-            messagebox.showerror("Σφάλμα", "Το BASE_PATH δεν μπορεί να είναι κενό!")
-            return
-
-        # Confirm
-        response = messagebox.askyesno(
-            "Επιβεβαίωση",
-            "Αποθήκευση αλλαγών και επανεκκίνηση εφαρμογής;"
-        )
-
-        if not response:
-            return
-
-        # Save
-        new_values = {
-            'BASE_PATH': self.base_path_var.get().strip(),
-            'BATCH_SIZE': self.batch_size_var.get(),
-            'T_SAMPLE_INCREMENT': self.t_sample_var.get(),
-            'T_ZERO_INCREMENT': self.t_zero_var.get(),
-            'DEFAULT_PRODUCT': self.default_product_var.get(),
-            'DEFAULT_TIME': self.default_time_var.get(),
-            'DEFAULT_REP': self.default_rep_var.get(),
-            'DROP_ZERO_NUTRIENTS': self.drop_zero_var.get(),
-        }
-
-        if self.config_editor.save_config(new_values):
-            messagebox.showinfo("Επιτυχία", "Οι ρυθμίσεις αποθηκεύτηκαν!\n\nΗ εφαρμογή θα επανεκκινηθεί.")
-            self.window.destroy()
-
-            # Restart
-            python = sys.executable
-            os.execl(python, python, *sys.argv)
-        else:
-            messagebox.showerror("Σφάλμα", "Αποτυχία αποθήκευσης ρυθμίσεων!")
-
-
-class UsageStatsWindow:
-    """Παράθυρο για Usage Statistics"""
-
-    def __init__(self, parent, telemetry):
-        self.window = tk.Toplevel(parent)
-        self.window.title("Στατιστικά Χρήσης")
-        self.window.geometry("600x500")
-        self.window.transient(parent)
-
-        self.telemetry = telemetry
-
-        self._setup_ui()
-        self._center_window()
-
-    def _center_window(self):
-        """Κεντράρει το παράθυρο"""
-        self.window.update_idletasks()
-        width = self.window.winfo_width()
-        height = self.window.winfo_height()
-        x = (self.window.winfo_screenwidth() // 2) - (width // 2)
-        y = (self.window.winfo_screenheight() // 2) - (height // 2)
-        self.window.geometry(f'{width}x{height}+{x}+{y}')
-
-    def _setup_ui(self):
-        """Δημιουργία UI"""
-        # Header
-        header = tk.Frame(self.window, bg='#27ae60', padx=15, pady=10)
-        header.pack(fill=tk.X)
-
-        tk.Label(
-            header,
-            text="📊 Στατιστικά Χρήσης",
-            font=("Segoe UI", 14, "bold"),
-            bg='#27ae60',
-            fg='white'
-        ).pack(anchor=tk.W)
-
-        tk.Label(
-            header,
-            text="Usage & Maintenance Info",
-            font=("Segoe UI", 9),
-            bg='#27ae60',
-            fg='white'
-        ).pack(anchor=tk.W)
-
-        # Stats display
-        stats_frame = ttk.Frame(self.window, padding="20")
-        stats_frame.pack(fill=tk.BOTH, expand=True)
-
-        summary = self.telemetry.get_summary()
-
-        stats_text = f"""
-╔══════════════════════════════════════════════════════════════════╗
-║                    ΣΤΑΤΙΣΤΙΚΑ ΧΡΗΣΗΣ                             ║
-╚══════════════════════════════════════════════════════════════════╝
-
-📊 ΣΥΝΟΛΙΚΑ:
-   • Συνολικά Αρχεία: {summary['total_files']}
-   • Συνολικές Sessions: {summary['total_sessions']}
-
-📅 ΠΕΡΙΟΔΟΣ:
-   • Σήμερα: {summary['today_files']} αρχεία
-   • Αυτή την Εβδομάδα: {summary['week_files']} αρχεία
-
-🕐 ΧΡΟΝΙΚΑ:
-   • Πρώτη Χρήση: {summary['first_used'][:10] if summary['first_used'] else 'N/A'}
-   • Τελευταία Χρήση: {summary['last_used'][:10] if summary['last_used'] else 'N/A'}
-
-⚠️ ERRORS:
-   • Πρόσφατα Σφάλματα: {summary['recent_errors']}
-
-╔══════════════════════════════════════════════════════════════════╗
-ℹ️  Τα δεδομένα αποθηκεύονται τοπικά για maintenance purposes
-╚══════════════════════════════════════════════════════════════════╝
-        """
-
-        text_widget = scrolledtext.ScrolledText(
-            stats_frame,
-            height=20,
-            state=tk.DISABLED,
-            font=("Consolas", 10),
-            wrap=tk.WORD
-        )
-        text_widget.pack(fill=tk.BOTH, expand=True)
-
-        text_widget.config(state=tk.NORMAL)
-        text_widget.insert(1.0, stats_text)
-        text_widget.config(state=tk.DISABLED)
-
-        # Button
-        ttk.Button(
-            stats_frame,
-            text="❌ Κλείσιμο",
-            command=self.window.destroy
-        ).pack(pady=10)
 
 
 class CSVLabGUI:
@@ -778,6 +294,24 @@ class CSVLabGUI:
         ttk.Button(button_frame, text="📄 Αρχείο", command=self._open_final_file).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="🔄 Reset", command=self._reset).pack(side=tk.LEFT, padx=5)
 
+    def _fill_missing_aa_in_df(self):
+        if self.excel_df is None:
+            return True  # τίποτα να κάνουμε
+
+        # provider που ανοίγει popup για κάθε λείπον aa
+        def provider(aa):
+            return ask_values_for_missing_aa(self.root, aa, MissingRowHandler.validate_input)
+
+        df2 = MissingRowHandler.insert_missing_aa_rows(self.excel_df, provider)
+
+        # Αν ακυρώσει ο χρήστης, insert_missing_aa_rows επιστρέφει το ίδιο df (rollback)
+        if df2 is self.excel_df:
+            return False
+
+        self.excel_df = df2
+        return True
+
+
     def _load_file(self):
         """Φόρτωση αρχείου"""
         protocol = self.protocol_entry.get().strip()
@@ -787,7 +321,7 @@ class CSVLabGUI:
 
         try:
             loader = DataLoader()
-            excel_file = os.path.join(loader.csv_path, f"{protocol}.xls")
+            excel_file = os.path.join(loader.base_path, f"{protocol}.xlsx")
 
             if not os.path.exists(excel_file):
                 messagebox.showerror("Σφάλμα", f"Αρχείο δεν βρέθηκε: {excel_file}")
@@ -806,6 +340,11 @@ class CSVLabGUI:
             self.excel_df = pd.read_excel(excel_file)
             self.csv_first_4 = protocol[:4]
             self.dash_part = result.group()
+            ok = self._fill_missing_aa_in_df()
+            if not ok:
+                messagebox.showinfo("Ακύρωση", "Ακυρώθηκε η συμπλήρωση των missing a/a. Δεν έγινε φόρτωση.")
+                self.excel_df = None
+                return
 
             info = f"""
 Αρχείο: {protocol}.xls
