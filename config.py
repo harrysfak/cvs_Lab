@@ -102,11 +102,7 @@ def validate_config():
             return False
     else:
         print(f"✅ BASE_PATH υπάρχει: {BASE_PATH}")
-    
-    if not os.path.exists(CSV_PATH):
-        print(f"   Δημιουργία CSV_PATH...")
-        os.makedirs(CSV_PATH, exist_ok=True)
-        print(f"✅ Δημιουργήθηκε: {CSV_PATH}")
+
     
     return True
 
@@ -116,7 +112,6 @@ def create_directory_structure():
     
     directories = [
         BASE_PATH,
-        CSV_PATH,
         PARTS_PATH,
         os.path.dirname(ZERO_PATH)
     ]
@@ -140,7 +135,6 @@ def print_config():
 
     print(f"APP_ICON:          {APP_ICON}")
     print(f"BASE_PATH:         {BASE_PATH}")
-    print(f"CSV_PATH:          {CSV_PATH}")
     print(f"PARTS_PATH:        {PARTS_PATH}")
     print(f"ZERO_PATH:         {ZERO_PATH}")
     print(f"FINAL_OUTPUT_PATH: {FINAL_OUTPUT_PATH}")
