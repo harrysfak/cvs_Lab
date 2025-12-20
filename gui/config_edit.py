@@ -34,6 +34,7 @@ class ConfigEditor:
 
         self.config_values = {
             'BASE_PATH': getattr(cfg, 'BASE_PATH', ''),
+            'OUTPUT_PATH': getattr(cfg, 'OUTPUT_PATH', ''),
             'BATCH_SIZE': getattr(cfg, 'BATCH_SIZE', 87),
             'T_SAMPLE_INCREMENT': getattr(cfg, 'T_SAMPLE_INCREMENT', 43),
             'T_ZERO_INCREMENT': getattr(cfg, 'T_ZERO_INCREMENT', 19),
@@ -47,29 +48,41 @@ class ConfigEditor:
         """Αποθηκεύει τις νέες τιμές στο config.py"""
         try:
             lines = self.config_path.read_text(encoding="utf-8").splitlines(True)
-
             new_lines = []
+
             for line in lines:
                 s = line.strip()
 
-                if s.startswith('BASE_PATH '):
+                if s.startswith("BASE_PATH "):
                     base = str(new_values["BASE_PATH"]).replace('"', '\\"')
                     new_lines.append(f'BASE_PATH = r"{base}"\n')
-                elif s.startswith('BATCH_SIZE'):
+
+                elif s.startswith("OUTPUT_PATH"):
+                    output = str(new_values["OUTPUT_PATH"]).replace('"', '\\"')
+                    new_lines.append(f'OUTPUT_PATH = r"{output}"\n')
+
+                elif s.startswith("BATCH_SIZE"):
                     new_lines.append(f'BATCH_SIZE = {int(new_values["BATCH_SIZE"])}\n')
-                elif s.startswith('T_SAMPLE_INCREMENT'):
+
+                elif s.startswith("T_SAMPLE_INCREMENT"):
                     new_lines.append(f'T_SAMPLE_INCREMENT = {int(new_values["T_SAMPLE_INCREMENT"])}\n')
-                elif s.startswith('T_ZERO_INCREMENT'):
+
+                elif s.startswith("T_ZERO_INCREMENT"):
                     new_lines.append(f'T_ZERO_INCREMENT = {int(new_values["T_ZERO_INCREMENT"])}\n')
-                elif s.startswith('DEFAULT_PRODUCT'):
+
+                elif s.startswith("DEFAULT_PRODUCT"):
                     prod = str(new_values["DEFAULT_PRODUCT"]).replace('"', '\\"')
                     new_lines.append(f'DEFAULT_PRODUCT = "{prod}"\n')
-                elif s.startswith('DEFAULT_TIME'):
+
+                elif s.startswith("DEFAULT_TIME"):
                     new_lines.append(f'DEFAULT_TIME = "{new_values["DEFAULT_TIME"]}"\n')
-                elif s.startswith('DEFAULT_REP'):
+
+                elif s.startswith("DEFAULT_REP"):
                     new_lines.append(f'DEFAULT_REP = {int(new_values["DEFAULT_REP"])}\n')
-                elif s.startswith('DROP_ZERO_NUTRIENTS'):
+
+                elif s.startswith("DROP_ZERO_NUTRIENTS"):
                     new_lines.append(f'DROP_ZERO_NUTRIENTS = {bool(new_values["DROP_ZERO_NUTRIENTS"])}\n')
+
                 else:
                     new_lines.append(line)
 

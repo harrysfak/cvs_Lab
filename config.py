@@ -1,23 +1,31 @@
-
 import os
+from pathlib import Path
 
+# Φάκελος ρίζας project (ένα επίπεδο πάνω από το /gui, /modules κλπ)
+APP_PATH = Path(__file__).resolve().parent  # αν το config.py είναι στη ρίζα
+# αν το config.py είναι μέσα σε /gui τότε θες: .parent.parent
 
-# ============================================================
-# ΒΑΣΙΚΕΣ ΔΙΑΔΡΟΜΕΣ - Windows Paths
-# ============================================================
-
+# Βασικά paths
 BASE_PATH = r"C:/excel"
+
+# output folder μέσα στο project (ασφαλές default)
+OUTPUT_PATH = r"C:/excel"
+
+# Files/folders
+PARTS_PATH = APP_PATH / "parts"
+ZERO_PATH = APP_PATH / "zero" / "zero.xlsx"
+FINAL_OUTPUT_PATH = OUTPUT_PATH + "\\" + "final.csv"
+
 ZERO_REMOTE_URL = (
     "https://qhlpulnlyvarhmckbelq.supabase.co/"
     "storage/v1/object/public/zero/zero.xlsx"
 )
+
 APP_ICON = "icon2.ico"
 
-# Υποφάκελοι
-CSV_PATH = BASE_PATH
-PARTS_PATH = os.path.join(CSV_PATH, "parts")
-ZERO_PATH = os.path.join(CSV_PATH, "zero", "zero.xlsx")
-FINAL_OUTPUT_PATH = os.path.join(CSV_PATH, "final.csv")
+# αν κάπου θες string και όχι Path:
+# str(FINAL_OUTPUT_PATH)
+
 
 # ============================================================
 # ΠΑΡΑΜΕΤΡΟΙ ΕΠΕΞΕΡΓΑΣΙΑΣ

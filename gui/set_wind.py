@@ -66,8 +66,16 @@ class SettingsWindow:
         ttk.Entry(paths_frame, textvariable=self.base_path_var, width=45).grid(
             row=0, column=1, padx=5, pady=5
         )
-        ttk.Button(paths_frame, text="📂", command=self._browse_path, width=3).grid(
+        ttk.Button(paths_frame, text="📂", command=self._browse_base_path, width=3).grid(
             row=0, column=2
+        )
+        ttk.Label(paths_frame, text="__Output__ Φάκελος Αποθήκευσης:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        self.output_path_var = tk.StringVar(value=self.config_editor.config_values['OUTPUT_PATH'])
+        ttk.Entry(paths_frame, textvariable=self.output_path_var, width=45).grid(
+            row=1, column=1, padx=5, pady=5
+        )
+        ttk.Button(paths_frame, text="📂", command=self._browse_output_path, width=3).grid(
+            row=1, column=2
         )
 
         # === PROCESSING ===
@@ -147,19 +155,28 @@ class SettingsWindow:
             command=self._reload
         ).pack(side=tk.LEFT, padx=5)
 
-    def _browse_path(self):
+    def _browse_base_path(self):
         """Browse για path"""
         folder = filedialog.askdirectory(
-            title="Επιλογή BASE_PATH",
+            title="Επιλογή Φακέλου Αναζήτησης.",
             initialdir=self.base_path_var.get() or os.path.expanduser("~")
         )
         if folder:
             self.base_path_var.set(folder)
+    def _browse_output_path(self):
+        """Browse για path"""
+        folder = filedialog.askdirectory(
+            title="Επιλογή Φακέλου Αποθήκευσης.",
+            initialdir=self.output_path_var.get() or os.path.expanduser("~")
+        )
+        if folder:
+            self.output_path_var.set(folder)
 
     def _reload(self):
         """Επαναφορά τιμών"""
         self.config_editor.load_config()
         self.base_path_var.set(self.config_editor.config_values['BASE_PATH'])
+        self.output_path_var.set(self.config_editor.config_values['OUTPUT_PATH'])
         self.batch_size_var.set(self.config_editor.config_values['BATCH_SIZE'])
         self.t_sample_var.set(self.config_editor.config_values['T_SAMPLE_INCREMENT'])
         self.t_zero_var.set(self.config_editor.config_values['T_ZERO_INCREMENT'])
@@ -195,6 +212,7 @@ class SettingsWindow:
         # Save
         new_values = {
             'BASE_PATH': self.base_path_var.get().strip(),
+            'OUTPUT_PATH': self.output_path_var.get().strip(),
             'BATCH_SIZE': self.batch_size_var.get(),
             'T_SAMPLE_INCREMENT': self.t_sample_var.get(),
             'T_ZERO_INCREMENT': self.t_zero_var.get(),
@@ -204,13 +222,14 @@ class SettingsWindow:
             'DROP_ZERO_NUTRIENTS': self.drop_zero_var.get(),
         }
 
-        if self.config_editor.save_config(new_values):
-            messagebox.showinfo("Επιτυχία", "Οι ρυθμίσεις αποθηκεύτηκαν!\n\nΗ εφαρμογή θα επανεκκινηθεί.")
-            self.window.destroy()
+        try:
+            if self.config_editor.save_config(new_values):
+                messagebox.showinfo("Επιτυχία", "Οι ρυθμίσεις αποθηκεύτηκαν!\n\nΗ εφαρμογή θα επανεκκινηθεί.")
+                self.window.destroy()
 
-            # Restart
-            python = sys.executable
-            os.execl(python, python, *sys.argv)
-        else:
-            messagebox.showerror("Σφάλμα", "Αποτυχία αποθήκευσης ρυθμίσεων!")
+                # Restart
+                python = sys.executable
+                os.execl(python, python, *sys.argv)
+        except Exception as e:
+            messagebox.showerror("Σφάλμα", f"Αποτυχία αποθήκευσης ρυθμίσεων!: {e}")
 
