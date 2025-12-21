@@ -76,6 +76,13 @@ python main.py
 
 Το τελικό αρχείο θα αποθηκευτεί στο `FINAL_OUTPUT_PATH`.
 
+## Δημιουργία .exe (Windows)
+Για δημιουργία εκτελέσιμου GUI `.exe`:
+1. Τρέξτε το `build_exe.bat`.
+2. Το αρχείο θα δημιουργηθεί στο `dist\MilkDataProcessor.exe`.
+
+> Το `.exe` βασίζεται στο `setting_gui.py` ως GUI entry point.
+
 ## Δομή φακέλων
 ```
 .

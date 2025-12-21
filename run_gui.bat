@@ -18,7 +18,7 @@ echo ╚════════════════════════
 echo.
 echo Εκκίνηση GUI εφαρμογής...
 echo.
-python gui_app.py
+python setting_gui.py
 if errorlevel 1 (
     echo.
     echo ❌ Σφάλμα εκτέλεσης!
