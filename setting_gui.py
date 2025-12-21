@@ -3,7 +3,7 @@ CSV Lab - GUI με Settings Window και Usage Telemetry
 Windows Version - Simple Professional Enhancements
 """
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog, scrolledtext
+from tkinter import ttk, messagebox, filedialog, scrolledtext, BooleanVar
 import threading
 import os
 import sys
@@ -22,16 +22,16 @@ from modules.zero_manager import prepare_zero_data
 from modules.output_generator import generate_output
 from modules.missing_row import MissingRowHandler
 from gui.missing_aa_dialog import ask_values_for_missing_aa
-import config
 from gui.telemetry import UsageTelemetry
 from gui.config_edit import ConfigEditor
 from gui.stats_wind import UsageStatsWindow
 from gui.set_wind import SettingsWindow
-
+import config
 
 
 class CSVLabGUI:
     """Κύρια κλάση GUI εφαρμογής"""
+    drop_zero_var: BooleanVar
 
     def __init__(self, root):
         self.root = root
@@ -311,7 +311,6 @@ class CSVLabGUI:
         self.excel_df = df2
         return True
 
-
     def _load_file(self):
         """Φόρτωση αρχείου"""
         protocol = self.protocol_entry.get().strip()
@@ -400,7 +399,6 @@ class CSVLabGUI:
 
         self._log(f"🕐 Random ώρα: {random_time}")
 
-
     def _start_processing(self):
         """Έναρξη επεξεργασίας"""
         if self.excel_df is None:
@@ -424,7 +422,7 @@ class CSVLabGUI:
         try:
             self._log("⚡ Έναρξη...")
 
-            self.processed_df = process_data(self.excel_df, drop_zero_nutrients=self.drop_zero_var.get())
+            self.processed_df = process_data(self.excel_df)
 
             time_handler = TimeHandler(len(self.processed_df))
             date = self.date_entry.get().strip()
@@ -442,7 +440,12 @@ class CSVLabGUI:
             metadata['zero_times'] = zero_times
 
             zero_dfs = prepare_zero_data(len(self.processed_df), formatted_date, zero_times)
-            final_path = generate_output(self.processed_df, metadata, zero_dfs)
+            final_path = generate_output(
+                self.processed_df,
+                metadata,
+                zero_dfs,
+                drop_zero_nutrients=self.drop_zero_var.get()
+            )
 
             # Calculate duration
             duration = (datetime.now() - self.processing_start_time).total_seconds()
