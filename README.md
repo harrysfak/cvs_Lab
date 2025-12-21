@@ -29,6 +29,16 @@
   - `requests`
 
 ## Εγκατάσταση
+### Windows (One-Click)
+1. Κάντε διπλό κλικ στο `install_one_click.bat`.
+2. Περιμένετε να ολοκληρωθεί η εγκατάσταση.
+3. Εκτελέστε:
+   - `run_gui.bat` για GUI, ή
+   - `python main.py` για CLI (μέσα από το `.venv`).
+
+> Το script δημιουργεί `.venv`, εγκαθιστά τις βιβλιοθήκες και τρέχει το `config.py`.
+
+### Χειροκίνητα (Windows/macOS/Linux)
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
