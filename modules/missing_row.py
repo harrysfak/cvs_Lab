@@ -8,7 +8,7 @@ class MissingRowHandler:
     # ---------- CORE: FIND MISSING a/a ----------
 
     @staticmethod
-    def find_missing_aa_numbers(df, col="a/a"):
+    def find_missing_aa_rows(df, col="a/a"):
         """
         Βρίσκει ποια a/a λείπουν από την αυξουσα σειρά.
         Παράδειγμα: [1,2,4,7] -> [3,5,6]

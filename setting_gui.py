@@ -320,6 +320,7 @@ class CSVLabGUI:
 
         try:
             loader = DataLoader()
+
             excel_file = os.path.join(loader.base_path, f"{protocol}.xlsx")
 
             if not os.path.exists(excel_file):
