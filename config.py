@@ -4,7 +4,7 @@ from pathlib import Path
 # Φάκελος ρίζας project (ένα επίπεδο πάνω από το /gui, /modules κλπ)
 APP_PATH = Path(__file__).resolve().parent  # αν το config.py είναι στη ρίζα
 # αν το config.py είναι μέσα σε /gui τότε θες: .parent.parent
-
+CSV_PATH = Path(__file__).resolve().parent
 # Βασικά paths
 BASE_PATH = r"C:/excel"
 
@@ -53,7 +53,7 @@ COLUMN_RENAMES = {
 # ΠΑΡΑΜΕΤΡΟΙ ΧΡΟΝΙΣΜΟΥ
 # ============================================================
 
-BATCH_SIZE = 87
+BATCH_SIZE = 81
 T_SAMPLE_INCREMENT = 43
 T_ZERO_INCREMENT = 19
 ZERO_BLOCK_ROWS = 8            # Γραμμές ανά zero block

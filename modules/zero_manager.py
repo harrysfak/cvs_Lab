@@ -78,6 +78,10 @@ class ZeroDataManager:
             
         Returns:
             List[pd.DataFrame]: Ενημερωμένα zero DataFrames
+
+            ===============================================
+
+            ελεγχο για το αν δεν χρειαζονται zero_copies να μην σκαει
         """
         if not self.zero_copies:
             raise ValueError("Δεν υπάρχουν zero copies. Καλέστε πρώτα create_zero_copies()")
@@ -137,7 +141,7 @@ class ZeroDataManager:
             raise ValueError("Δεν υπάρχει zero DataFrame για αποθήκευση")
         
         output_path = output_path or os.path.join(config.CSV_PATH, "zero.csv")
-        self.zero_df.to_csv(output_path, index=False)
+        self.zero_df.to_csv(output_path, index=False, lineterminator='')
         print(f"✅ Αποθηκεύτηκε zero CSV: {output_path}")
 
 

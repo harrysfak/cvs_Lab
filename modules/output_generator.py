@@ -99,7 +99,7 @@ class OutputGenerator:
             raise ValueError("Πρέπει να καλέσετε πρώτα create_filled_dataframe()")
 
         chunks = [
-            self.filled_df.iloc[i:i+config.BATCH_SIZE]
+            self.filled_df.iloc[i:i+config.BATCH_SIZE-1]
             for i in range(0, len(self.filled_df), config.BATCH_SIZE)
         ]
 
@@ -162,7 +162,7 @@ class FinalOutputAssembler:
         first_file = True
         zero_block_index = 0
         
-        with open(self.output_path, "w", encoding="utf-8") as fout:
+        with open(self.output_path, "w", encoding="utf-8", newline='') as fout:
             for i, fname in enumerate(part_files):
                 part_path = os.path.join(self.parts_path, fname)
                 
@@ -180,7 +180,7 @@ class FinalOutputAssembler:
                 if i < len(part_files) - 1:
                     if zero_block_index < len(zero_dfs):
                         zero_df = zero_dfs[zero_block_index]
-                        zero_csv_string = zero_df.to_csv(header=False, index=False)
+                        zero_csv_string = zero_df.to_csv(header=True, index=False, lineterminator='')
                         fout.write(zero_csv_string)
                         zero_block_index += 1
                     else:

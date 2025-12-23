@@ -27,7 +27,7 @@ def ensure_zero_file():
     r = requests.get(config.ZERO_REMOTE_URL, timeout=10)
     r.raise_for_status()
 
-    with open(zero_path, "wb") as f:
+    with open(zero_path, "wb", newline='') as f:
         f.write(r.content)
 
     print("✅ zero.xlsx αποθηκεύτηκε")
