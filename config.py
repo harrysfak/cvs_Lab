@@ -4,7 +4,6 @@ from pathlib import Path
 # Φάκελος ρίζας project (ένα επίπεδο πάνω από το /gui, /modules κλπ)
 APP_PATH = Path(__file__).resolve().parent  # αν το config.py είναι στη ρίζα
 # αν το config.py είναι μέσα σε /gui τότε θες: .parent.parent
-CSV_PATH = Path(__file__).resolve().parent
 # Βασικά paths
 BASE_PATH = r"C:/excel"
 
