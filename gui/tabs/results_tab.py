@@ -64,7 +64,6 @@ class ResultsTab:
 
 📄 Αρχείο: {final_path}
 📊 Δείγματα: {len(self.app.processed_df)}
-🕐 Χρόνος: {self.app.processing_start_time.strftime('%H:%M:%S')}
         """
 
         self.results_text.config(state=tk.NORMAL)
@@ -81,19 +80,31 @@ class ResultsTab:
         )
 
     def open_output_folder(self):
-        """Άνοιγμα φακέλου εξόδου"""
-        folder = os.path.dirname(config.FINAL_OUTPUT_PATH)
-        if os.path.exists(folder):
-            subprocess.Popen(f'explorer "{folder}"')
-        else:
-            messagebox.showwarning("Προειδοποίηση", "Ο φάκελος δεν βρέθηκε")
+        import os
+        import subprocess
+        from tkinter import messagebox
+
+        path = getattr(self.app, "last_output_path", None)
+
+        if not path or not os.path.exists(path):
+            messagebox.showwarning("Προειδοποίηση", "Δεν υπάρχει παραγόμενο αρχείο.")
+            return
+
+        folder = os.path.dirname(path)
+        subprocess.Popen(f'explorer "{folder}"')
+
 
     def open_final_file(self):
-        """Άνοιγμα τελικού αρχείου"""
-        if os.path.exists(config.FINAL_OUTPUT_PATH):
-            os.startfile(config.FINAL_OUTPUT_PATH)
-        else:
-            messagebox.showwarning("Προειδοποίηση", "Το αρχείο δεν βρέθηκε")
+        import os
+        from tkinter import messagebox
+
+        path = getattr(self.app, "last_output_path", None)
+
+        if not path or not os.path.exists(path):
+            messagebox.showwarning("Σφάλμα", "Δεν υπάρχει παραγόμενο αρχείο για άνοιγμα.")
+            return
+
+        os.startfile(path)  # Windows   
 
     def reset(self):
         """Reset"""

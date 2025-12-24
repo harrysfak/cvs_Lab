@@ -79,6 +79,8 @@ class LoadTab:
             except Exception as e:
                 print(f'Exception : {e} (try to open find excel_file)')
 
+            self.app.protocol_number = protocol.strip()
+
             dash_regx = r"(-\d+)"
             result = re.search(dash_regx, protocol)
 

@@ -52,6 +52,23 @@ class ProcessTab:
         # Progress
         self.progress = ttk.Progressbar(self.frame, mode='indeterminate', length=500)
         self.progress.pack(pady=10)
+        
+        #LOG LABELS
+        self.status_label = tk.Label(
+            self.frame,
+            text="Αναμονή για εκτέλεση",
+            fg="#555",
+            font=("Segoe UI", 10)
+        )
+        self.status_label.pack(pady=10)
+
+    def set_status(self, text, color="#555"):
+        def ui():
+            self.status_label.config(text=text, fg=color)
+            self.app.update_status(text)
+            self.app.log(text)
+        self.app.root.after(0, ui)
+
 
     def start_processing(self):
         """Έναρξη επεξεργασίας"""
@@ -72,34 +89,29 @@ class ProcessTab:
         thread.start()
 
     def _process_data(self):
-        """Επεξεργασία - ΝΕΑ ΡΟΗ ΜΕ MISSING A/A HANDLER"""
         try:
-            self.app.logger.info("⚡ Έναρξη επεξεργασίας...")
+            self.set_status("⚡ Έναρξη επεξεργασίας...", "#2980b9")
 
-            # ΒΗΜΑ 1: Έλεγχος για missing a/a
-            self.app.logger.info("🔍 Έλεγχος για missing a/a...")
+            self.set_status("🔍 Έλεγχος για missing a/a...", "#2980b9")
             missing_rows = MissingRowHandler.find_missing_aa_rows(self.app.excel_df)
 
             if missing_rows:
                 self.app.logger.warn(f"⚠️ Βρέθηκαν {len(missing_rows)} γραμμές με missing a/a")
 
-            return
-
-            # Συνέχεια με κανονική επεξεργασία
             self._continue_processing()
+
+            self.set_status("✅ Ολοκληρώθηκε!", "#27ae60")
 
         except Exception as e:
             self.app.telemetry.record_error(str(e))
             self.app.logger.error(f"❌ {str(e)}")
+            self.set_status(f"❌ Σφάλμα: {e}", "#c0392b")
             self.app.root.after(0, messagebox.showerror, "Σφάλμα", str(e))
+
         finally:
             self.app.root.after(0, self.progress.stop)
             self.app.root.after(0, lambda: self.process_btn.config(state=tk.NORMAL))
 
-        # Συνέχεια επεξεργασίας
-        thread = threading.Thread(target=self._continue_processing)
-        thread.daemon = True
-        thread.start()
 
     def _continue_processing(self):
         """Συνέχεια επεξεργασίας"""
@@ -138,6 +150,7 @@ class ProcessTab:
             # ΒΗΜΑ 5: Generate output
             self.app.logger.info("📝 Δημιουργία metadata...")
             metadata = MetadataGenerator.generate_metadata(len(self.app.processed_df), formatted_date)
+            metadata["protocol_number"] = self.app.protocol_number
             metadata['sample_ids'] = sample_ids
             metadata['sample_times'] = sample_times
             metadata['zero_times'] = zero_times
@@ -149,6 +162,8 @@ class ProcessTab:
 
             self.app.logger.info("💾 Δημιουργία τελικού αρχείου...")
             final_path = generate_output(self.app.processed_df, metadata, zero_dfs)
+            self.app.last_output_path = final_path
+
 
             # Telemetry
             duration = (datetime.now() - self.app.processing_start_time).total_seconds()
