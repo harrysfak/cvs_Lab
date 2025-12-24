@@ -1,0 +1,12 @@
+Sample Id,Rep #,Product,Fat,Protein,Lactose,TS,SNF,Date,Time,Remark,
+Zero setting,,,,,,,,,,,
+,1,Zero Setting,"-0,01",0,"0,01",0,"0,01",16/05/2025,10:12:00,,
+,2,Zero Setting,"-0,01",0,"0,01",0,"0,01",16/05/2025,10:13:00,,
+,3,Zero Setting,"-0,01",0,"0,01",0,"0,01",16/05/2025,10:13:00,,
+,4,Zero Setting,0,0,"0,01",0,"0,01",16/05/2025,10:13:00,,
+,5,Zero Setting,"-0,01",0,"0,01",0,"0,01",16/05/2025,10:14:00,,
+,Mean,Zero Setting,"-0,01",0,"0,01",0,"0,01",16/05/2025,10:14:00,,
+,Sd,Zero Setting,2,2,1,2,2,16/05/2025,10:14:00,,
+Zero correction,,,,,,,,,,,
+,"Corr,",Zero Setting,"0,01",0,"-0,01",0,"-0,01",16/05/2025,10:14:00,,
+Sample Id,Rep #,Product,Fat,Protein,Lactose,FPD,TS,16/05/2025,Date,Time,Remark

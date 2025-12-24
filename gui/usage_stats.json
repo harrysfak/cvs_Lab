@@ -1,0 +1,193 @@
+{
+    "total_files_processed": 23,
+    "total_sessions": 39,
+    "last_used": "2025-12-25T00:32:12.619090",
+    "first_used": "2025-12-24T10:45:27.520037",
+    "processing_history": [
+        {
+            "timestamp": "2025-12-24T11:32:26.928298",
+            "filename": "1605-6",
+            "samples": 233,
+            "duration_sec": 0.548031
+        },
+        {
+            "timestamp": "2025-12-24T11:32:27.105308",
+            "filename": "1605-6",
+            "samples": 233,
+            "duration_sec": 0.725041
+        },
+        {
+            "timestamp": "2025-12-24T11:47:39.377487",
+            "filename": "1605-6",
+            "samples": 233,
+            "duration_sec": 0.124007
+        },
+        {
+            "timestamp": "2025-12-24T11:47:39.539496",
+            "filename": "1605-6",
+            "samples": 233,
+            "duration_sec": 0.286016
+        },
+        {
+            "timestamp": "2025-12-24T11:52:28.879046",
+            "filename": "1605-6",
+            "samples": 233,
+            "duration_sec": 0.098006
+        },
+        {
+            "timestamp": "2025-12-24T11:52:29.043055",
+            "filename": "1605-6",
+            "samples": 233,
+            "duration_sec": 0.262015
+        },
+        {
+            "timestamp": "2025-12-24T11:54:41.636639",
+            "filename": "1605-6",
+            "samples": 233,
+            "duration_sec": 0.095006
+        },
+        {
+            "timestamp": "2025-12-24T11:54:41.786647",
+            "filename": "1605-6",
+            "samples": 233,
+            "duration_sec": 0.245014
+        },
+        {
+            "timestamp": "2025-12-24T11:58:41.439355",
+            "filename": "1605-6",
+            "samples": 233,
+            "duration_sec": 0.114007
+        },
+        {
+            "timestamp": "2025-12-24T11:58:41.609365",
+            "filename": "1605-6",
+            "samples": 233,
+            "duration_sec": 0.284017
+        },
+        {
+            "timestamp": "2025-12-24T12:01:41.838673",
+            "filename": "1605-6",
+            "samples": 233,
+            "duration_sec": 0.105006
+        },
+        {
+            "timestamp": "2025-12-24T12:01:42.075687",
+            "filename": "1605-6",
+            "samples": 233,
+            "duration_sec": 0.34202
+        },
+        {
+            "timestamp": "2025-12-24T12:17:49.158001",
+            "filename": "1605-6",
+            "samples": 233,
+            "duration_sec": 0.080005
+        },
+        {
+            "timestamp": "2025-12-24T12:17:49.295008",
+            "filename": "1605-6",
+            "samples": 233,
+            "duration_sec": 0.217012
+        },
+        {
+            "timestamp": "2025-12-24T12:20:22.716784",
+            "filename": "1605-6",
+            "samples": 233,
+            "duration_sec": 0.142008
+        },
+        {
+            "timestamp": "2025-12-24T12:21:37.577065",
+            "filename": "1605-6",
+            "samples": 233,
+            "duration_sec": 0.203011
+        },
+        {
+            "timestamp": "2025-12-24T12:25:11.214285",
+            "filename": "1605-6",
+            "samples": 233,
+            "duration_sec": 0.103006
+        },
+        {
+            "timestamp": "2025-12-24T12:25:36.370724",
+            "filename": "1605-6",
+            "samples": 233,
+            "duration_sec": 0.131008
+        },
+        {
+            "timestamp": "2025-12-24T12:28:22.479225",
+            "filename": "1605-6",
+            "samples": 233,
+            "duration_sec": 0.088006
+        },
+        {
+            "timestamp": "2025-12-25T00:07:43.521571",
+            "filename": "1605-6",
+            "samples": 232,
+            "duration_sec": 0.219934
+        },
+        {
+            "timestamp": "2025-12-25T00:18:47.731768",
+            "filename": "1605-6",
+            "samples": 232,
+            "duration_sec": 0.157527
+        },
+        {
+            "timestamp": "2025-12-25T00:29:03.922560",
+            "filename": "1605-6",
+            "samples": 232,
+            "duration_sec": 0.15947
+        },
+        {
+            "timestamp": "2025-12-25T00:32:28.252946",
+            "filename": "1605-6",
+            "samples": 232,
+            "duration_sec": 0.166364
+        }
+    ],
+    "errors": [
+        {
+            "timestamp": "2025-12-24T11:04:26.564187",
+            "error": "'LoadTab' object has no attribute 'file_info_text'"
+        },
+        {
+            "timestamp": "2025-12-24T11:04:47.164365",
+            "error": "'LoadTab' object has no attribute 'file_info_text'"
+        },
+        {
+            "timestamp": "2025-12-24T11:04:52.203653",
+            "error": "'LoadTab' object has no attribute 'file_info_text'"
+        },
+        {
+            "timestamp": "2025-12-24T11:30:40.904234",
+            "error": "binary mode doesn't take a newline argument"
+        },
+        {
+            "timestamp": "2025-12-24T11:30:41.212251",
+            "error": "binary mode doesn't take a newline argument"
+        },
+        {
+            "timestamp": "2025-12-24T11:52:21.204607",
+            "error": "[Errno 13] Permission denied: 'C:/Users/user/Desktop/csv_Lab/cvs_Lab-new\\\\final.csv'"
+        },
+        {
+            "timestamp": "2025-12-24T11:52:21.357615",
+            "error": "[Errno 13] Permission denied: 'C:/Users/user/Desktop/csv_Lab/cvs_Lab-new\\\\final.csv'"
+        },
+        {
+            "timestamp": "2025-12-24T11:57:49.822403",
+            "error": "to_csv() got an unexpected keyword argument 'headers'"
+        },
+        {
+            "timestamp": "2025-12-24T11:57:49.928409",
+            "error": "to_csv() got an unexpected keyword argument 'headers'"
+        },
+        {
+            "timestamp": "2025-12-24T12:28:18.291985",
+            "error": "[Errno 13] Permission denied: 'C:/Users/user/Desktop/csv_Lab/cvs_Lab-new\\\\16052024-6.csv'"
+        },
+        {
+            "timestamp": "2025-12-25T00:22:18.331186",
+            "error": "\u0394\u03b5\u03bd \u03c5\u03c0\u03ac\u03c1\u03c7\u03bf\u03c5\u03bd zero copies. \u039a\u03b1\u03bb\u03ad\u03c3\u03c4\u03b5 \u03c0\u03c1\u03ce\u03c4\u03b1 create_zero_copies()"
+        }
+    ],
+    "app_version": "v1.3"
+}

@@ -8,7 +8,6 @@ from tkinter import scrolledtext
 
 import os
 import sys
-from datetime import datetime
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -22,7 +21,6 @@ from gui.config_edit import ConfigEditor
 from gui.stats_wind import UsageStatsWindow
 from gui.set_wind import SettingsWindow
 from gui.log import UILogger
-
 
 # Import tab modules
 from gui.tabs import LoadTab, SettingsTab, ProcessTab, ResultsTab
@@ -72,6 +70,15 @@ class CSVLabGUI:
         y = (self.root.winfo_screenheight() // 2) - (height // 2)
         self.root.geometry(f'{width}x{height}+{x}+{y}')
 
+    def _go_tab(self, delta: int):
+        if not hasattr(self, "notebook"):
+            return
+        i = self.notebook.index("current")
+        n = self.notebook.index("end")
+        new_i = i + delta
+        if 0 <= new_i < n:
+            self.notebook.select(new_i)
+
     def _setup_ui(self):
         """Δημιουργία UI structure"""
         # Header
@@ -85,7 +92,7 @@ class CSVLabGUI:
         tk.Label(
             title_frame,
             text="🥛 CSV Lab - Σύστημα Επεξεργασίας CSV 🥛",
-            font=("Segoe UI", 18, "bold"),
+            font=("Segue UI", 18, "bold"),
             bg='#2c3e50',
             fg='white'
         ).pack(anchor=tk.W)
@@ -128,25 +135,29 @@ class CSVLabGUI:
             relief=tk.RAISED
         ).pack(side=tk.LEFT, padx=5)
 
-        # Notebook
-        style = ttk.Style()
-        style.configure('TNotebook.Tab', padding=[20, 10])
+        # Area για το notebook (ώστε οι κάτω μπάρες να μένουν κάτω)
+        self.main_area = tk.Frame(self.root)
+        self.main_area.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-        self.notebook = ttk.Notebook(self.root)
-        self.notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        # --- Bottom navigation bar (sticky) ---
+        self.nav_frame = tk.Frame(self.root, bg="#34495e", height=44)
+        self.nav_frame.pack(side=tk.BOTTOM, fill=tk.X)
 
-        # ---- Log Tab (central) ----
-        log_frame = ttk.Frame(self.notebook, padding="10")
-        self.log_text = scrolledtext.ScrolledText(
-            log_frame,
-            height=12,
-            state=tk.DISABLED,
-            font=("Consolas", 9),
-            wrap=tk.WORD
+        self.btn_prev = tk.Button(
+            self.nav_frame, text="⬅ Προηγούμενο",
+            bg="#2ecc71", fg="white", font=("Segoe UI", 10, "bold"),
+            padx=14, pady=6, cursor="hand2",
+            command=lambda: self._go_tab(-1)
         )
-        self.log_text.pack(fill=tk.BOTH, expand=True)
+        self.btn_prev.pack(side=tk.LEFT, padx=10, pady=6)
 
-        self.notebook.add(log_frame, text="🧾 Logs")
+        self.btn_next = tk.Button(
+            self.nav_frame, text="Επόμενο ➡",
+            bg="#2ecc71", fg="white", font=("Segoe UI", 10, "bold"),
+            padx=14, pady=6, cursor="hand2",
+            command=lambda: self._go_tab(1)
+        )
+        self.btn_next.pack(side=tk.RIGHT, padx=10, pady=6)
 
         # Status bar
         status_frame = tk.Frame(self.root, bg='#34495e', height=30)
@@ -163,26 +174,36 @@ class CSVLabGUI:
         )
         self.status_bar.pack(fill=tk.X)
 
-        "==========================="
-
-        # ---- Central logger instance ----
-        self.logger = UILogger(self.log_text, status_label=self.status_bar)
-
-
-
     def _setup_tabs(self):
-        """Δημιουργία tabs από modules"""
-        # Create tab instances (passing self as reference)
+        style = ttk.Style()
+        style.configure('TNotebook.Tab', padding=[20, 10])
+
+        self.notebook = ttk.Notebook(self.main_area)
+        self.notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
         self.load_tab = LoadTab(self.notebook, self)
         self.settings_tab = SettingsTab(self.notebook, self)
         self.process_tab = ProcessTab(self.notebook, self)
         self.results_tab = ResultsTab(self.notebook, self)
 
-        # Add tabs to notebook
         self.notebook.add(self.load_tab.get_frame(), text="📂 1. Φόρτωση")
         self.notebook.add(self.settings_tab.get_frame(), text="⚙️ 2. Ρυθμίσεις")
         self.notebook.add(self.process_tab.get_frame(), text="⚡ 3. Επεξεργασία")
         self.notebook.add(self.results_tab.get_frame(), text="✅ 4. Αποτελέσματα")
+
+        # --- Logs tab ---
+        self.log_frame = ttk.Frame(self.notebook, padding="10")
+        self.log_text = scrolledtext.ScrolledText(
+            self.log_frame,
+            height=12,
+            state=tk.DISABLED,
+            font=("Consolas", 9),
+            wrap=tk.WORD
+        )
+        self.log_text.pack(fill=tk.BOTH, expand=True)
+        self.notebook.add(self.log_frame, text="🧾 Logs")
+
+        self.logger = UILogger(self.log_text, status_label=self.status_bar)
 
     def _open_settings(self):
         """Άνοιγμα Settings Window"""

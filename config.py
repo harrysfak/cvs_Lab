@@ -3,7 +3,7 @@ from pathlib import Path
 
 # Φάκελος ρίζας project (ένα επίπεδο πάνω από το /gui, /modules κλπ)
 APP_PATH = Path(__file__).resolve().parent  # αν το config.py είναι στη ρίζα
-# αν το config.py είναι μέσα σε /gui τότε θες: .parent.parent
+# αν το config.py είναι μέσα σε /gui τότε θες:.parent.parent
 # Βασικά paths
 BASE_PATH = r"C:/excel"
 
@@ -52,10 +52,10 @@ COLUMN_RENAMES = {
 # ΠΑΡΑΜΕΤΡΟΙ ΧΡΟΝΙΣΜΟΥ
 # ============================================================
 
-BATCH_SIZE = 81
-T_SAMPLE_INCREMENT = 43
-T_ZERO_INCREMENT = 19
-ZERO_BLOCK_ROWS = 8            # Γραμμές ανά zero block
+BATCH_SIZE = 87
+T_SAMPLE_INCREMENT = 45
+T_ZERO_INCREMENT = 20
+ZERO_BLOCK_ROWS = 8  # Γραμμές ανά zero block
 ZERO_ROW_INDEX = [1, 2, 3, 4, 5, 6, 7, 9]  # Indices για update timestamps
 
 # ============================================================
@@ -71,7 +71,7 @@ DEFAULT_REP = 1
 # ============================================================
 
 TARGET_COLUMN_ORDER = [
-    'Sample Id', 'Rep #', 'Product', 'Fat', 'Protein', 
+    'Sample Id', 'Rep #', 'Product', 'Fat', 'Protein',
     'Lactose', 'FPD', 'TS', 'SNF', 'Date', 'Time', 'Remark'
 ]
 
@@ -89,7 +89,7 @@ BG_COLORS = "#131D1C"
 def validate_config():
     """Ελέγχει αν οι βασικές διαδρομές υπάρχουν"""
     print("Έλεγχος διαδρομών...")
-    
+
     if not os.path.exists(BASE_PATH):
         print(f"❌ Το BASE_PATH δεν υπάρχει: {BASE_PATH}")
         print(f"   Δημιουργία φακέλου...")
@@ -102,19 +102,19 @@ def validate_config():
     else:
         print(f"✅ BASE_PATH υπάρχει: {BASE_PATH}")
 
-    
     return True
+
 
 def create_directory_structure():
     """Δημιουργεί τη δομή φακέλων αν δεν υπάρχει"""
     print("\nΔημιουργία δομής φακέλων...")
-    
+
     directories = [
         BASE_PATH,
         PARTS_PATH,
         os.path.dirname(ZERO_PATH)
     ]
-    
+
     for directory in directories:
         if not os.path.exists(directory):
             try:
@@ -124,6 +124,7 @@ def create_directory_structure():
                 print(f"❌ Αποτυχία δημιουργίας {directory}: {e}")
         else:
             print(f"ℹ️  Υπάρχει ήδη: {directory}")
+
 
 def print_config():
     """Εμφανίζει την τρέχουσα ρύθμιση"""
@@ -144,9 +145,10 @@ def print_config():
     print(f"DEFAULT_PRODUCT:   {DEFAULT_PRODUCT}")
     print("=" * 70)
 
+
 if __name__ == "__main__":
     print_config()
-    
+
     if validate_config():
         print("\n✅ Οι ρυθμίσεις είναι έγκυρες!")
         create_directory_structure()

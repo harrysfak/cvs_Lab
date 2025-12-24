@@ -25,3 +25,4 @@ class UILogger:
     def info(self, msg): self._write("INFO", msg)
     def warn(self, msg): self._write("WARN", msg)
     def error(self, msg): self._write("ERROR", msg)
+    
