@@ -1,0 +1,16 @@
+{
+    "total_files_processed": 1,
+    "total_sessions": 5,
+    "last_used": "2025-12-20T23:10:27.409375",
+    "first_used": "2025-12-17T21:14:11.567082",
+    "processing_history": [
+        {
+            "timestamp": "2025-12-17T21:27:03.595070",
+            "filename": "1605-6",
+            "samples": 232,
+            "duration_sec": 0.280577
+        }
+    ],
+    "errors": [],
+    "app_version": "v1.3"
+}

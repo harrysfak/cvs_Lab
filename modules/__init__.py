@@ -15,6 +15,7 @@ from .data_processor import DataProcessor, process_data
 from .time_handler import TimeHandler, MetadataGenerator, generate_time_metadata
 from .zero_manager import ZeroDataManager, prepare_zero_data
 from .output_generator import OutputGenerator, FinalOutputAssembler, generate_output
+from .missing_row import MissingRowHandler
 
 __version__ = "1.0.0"
 __author__ = "Your Name"
@@ -41,6 +42,10 @@ __all__ = [
     'OutputGenerator',
     'FinalOutputAssembler',
     'generate_output',
+
+    #Missing row Handler
+    'MissingRowHandler',
+
 ]
 
 

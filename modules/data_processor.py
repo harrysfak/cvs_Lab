@@ -48,87 +48,12 @@ class DataProcessor:
         
         # Μετονομασίες στηλών
         self.df = self.df.rename(columns=config.COLUMN_RENAMES)
-        
+        dupes = self.df.columns[self.df.columns.duplicated()].tolist()
+        print("DUPLICATE COLS:", dupes)
+
         print(f"✅ Αρχικό filtering ολοκληρώθηκε. Σύνολο γραμμών: {len(self.df)}")
         return self.df
     
-    def drop_zero_nutrient_rows(
-        self,
-        fat_col: str = "Fat",
-        protein_col: str = "Protein",
-        lactose_col: str = "Lactose",
-        reset_index: bool = True,
-        verbose: bool = True
-    ) -> pd.DataFrame:
-        """
-        Αφαιρεί γραμμές όπου Fat, Protein και Lactose είναι ΟΛΑ μηδέν.
-        
-        Parameters
-        ----------
-        fat_col, protein_col, lactose_col : str
-            Ονόματα στηλών
-        reset_index : bool
-            Αν True, κάνει reset index μετά το drop
-        verbose : bool
-            Αν True, εκτυπώνει τι αφαιρέθηκε
-            
-        Returns
-        -------
-        pd.DataFrame
-            Το καθαρισμένο dataframe
-        """
-        # Έλεγχος αν υπάρχουν οι στήλες
-        required_cols = [fat_col, protein_col, lactose_col]
-        missing_cols = [col for col in required_cols if col not in self.df.columns]
-        
-        if missing_cols:
-            print(f"⚠️  Προειδοποίηση: Λείπουν στήλες {missing_cols}. Παράλειψη zero nutrient filter.")
-            return self.df
-        
-        # Μετατροπή σε float (λόγω np.column_stack → strings)
-        try:
-            fat = pd.to_numeric(self.df[fat_col], errors='coerce').fillna(0)
-            protein = pd.to_numeric(self.df[protein_col], errors='coerce').fillna(0)
-            lactose = pd.to_numeric(self.df[lactose_col], errors='coerce').fillna(0)
-        except Exception as e:
-            print(f"⚠️  Σφάλμα μετατροπής σε numeric: {e}")
-            return self.df
-        
-        # Μάσκα γραμμών που ΠΡΕΠΕΙ να φύγουν
-        drop_mask = (fat == 0) & (protein == 0) & (lactose == 0)
-        
-        if verbose:
-            dropped_count = drop_mask.sum()
-            print(f"🔍 Έλεγχος για γραμμές με Fat=Protein=Lactose=0...")
-            print(f"   Βρέθηκαν {dropped_count} γραμμές προς αφαίρεση")
-            
-            if dropped_count > 0:
-                print("\n📋 Γραμμές που θα αφαιρεθούν:")
-                dropped_rows = self.df.loc[drop_mask, [fat_col, protein_col, lactose_col]]
-                
-                # Εμφάνιση με indices
-                for idx in dropped_rows.index[:10]:  # Μέχρι 10 γραμμές
-                    print(f"   Index {idx}: Fat={self.df.loc[idx, fat_col]}, "
-                          f"Protein={self.df.loc[idx, protein_col]}, "
-                          f"Lactose={self.df.loc[idx, lactose_col]}")
-                
-                if dropped_count > 10:
-                    print(f"   ... και {dropped_count - 10} ακόμα γραμμές")
-                print()
-        
-        # Drop
-        rows_before = len(self.df)
-        self.df = self.df.drop(self.df[drop_mask].index)
-        rows_after = len(self.df)
-        
-        if reset_index:
-            self.df = self.df.reset_index(drop=True)
-        
-        if verbose:
-            print(f"✅ Αφαιρέθηκαν {rows_before - rows_after} γραμμές")
-            print(f"   Νέο σύνολο γραμμών: {rows_after}")
-        
-        return self.df
 
     def _remove_column_after_aa(self):
         """Διαγράφει τη στήλη αμέσως μετά το 'a/a' ΜΟΝΟ αν είναι άχρηστη."""
@@ -265,7 +190,7 @@ class DataProcessor:
         return self.df
 
 
-def process_data(excel_df: pd.DataFrame, drop_zero_nutrients: bool = None) -> pd.DataFrame:
+def process_data(excel_df: pd.DataFrame) -> pd.DataFrame:
     """
     Wrapper function για πλήρη επεξεργασία δεδομένων
     
@@ -276,27 +201,13 @@ def process_data(excel_df: pd.DataFrame, drop_zero_nutrients: bool = None) -> pd
     Returns:
         pd.DataFrame: Πλήρως επεξεργασμένο DataFrame
     """
-    # Χρήση config value αν δεν δίνεται explicit
-    if drop_zero_nutrients is None:
-        drop_zero_nutrients = getattr(config, 'DROP_ZERO_NUTRIENTS', True)
+
     
     processor = DataProcessor(excel_df)
     
     # Βασική επεξεργασία
     processor.initial_filtering()
-    
-    # Αφαίρεση zero nutrient rows (αν ενεργοποιημένο)
-    if drop_zero_nutrients:
-        print("\n🔧 Εφαρμογή Zero Nutrient Filter...")
-        processor.drop_zero_nutrient_rows(
-            fat_col="Fat",
-            protein_col="Protein", 
-            lactose_col="Lactose",
-            reset_index=True,
-            verbose=True
-        )
-    else:
-        print("\nℹ️  Zero Nutrient Filter: ΑΝΕΝΕΡΓΟ (config.DROP_ZERO_NUTRIENTS = False)")
+
     
     # Συνέχεια επεξεργασίας
     processor.format_decimals()

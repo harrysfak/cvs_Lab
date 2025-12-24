@@ -4,8 +4,13 @@ Module για τη διαχείριση zero calibration data
 import os
 import pandas as pd
 from typing import List
-import config
-from modules.zero_loader import ensure_zero_file
+# Import config με fallback
+try:
+    from . import config
+    from .zero_loader import ensure_zero_file
+except ImportError:
+    import config
+    from modules.zero_loader import ensure_zero_file
 
 
 
@@ -73,6 +78,10 @@ class ZeroDataManager:
             
         Returns:
             List[pd.DataFrame]: Ενημερωμένα zero DataFrames
+
+            ===============================================
+
+            ελεγχο για το αν δεν χρειαζονται zero_copies να μην σκαει
         """
         if not self.zero_copies:
             raise ValueError("Δεν υπάρχουν zero copies. Καλέστε πρώτα create_zero_copies()")
@@ -131,8 +140,8 @@ class ZeroDataManager:
         if self.zero_df is None:
             raise ValueError("Δεν υπάρχει zero DataFrame για αποθήκευση")
         
-        output_path = output_path or os.path.join(config.CSV_PATH, "zero.csv")
-        self.zero_df.to_csv(output_path, index=False)
+        output_path = output_path or os.path.join(config.APP_PATH, "zero.csv")
+        self.zero_df.to_csv(output_path, index=False, lineterminator='')
         print(f"✅ Αποθηκεύτηκε zero CSV: {output_path}")
 
 

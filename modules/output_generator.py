@@ -5,7 +5,11 @@ import os
 import pandas as pd
 import numpy as np
 from typing import List
-import config
+# Import config με fallback
+try:
+    from . import config
+except ImportError:
+    import config
 
 
 class OutputGenerator:
@@ -21,18 +25,48 @@ class OutputGenerator:
         self.metadata = metadata
         self.filled_df = None
         self.parts_path = config.PARTS_PATH
-    
+
+    def drop_zero_nutrient_rows_on_filled(self, reset_index=False, verbose=True):
+        if self.filled_df is None:
+            raise ValueError("Πρώτα φτιάξε filled_df")
+
+        for c in ("Fat", "Protein", "Lactose"):
+            if c not in self.filled_df.columns:
+                if verbose:
+                    print(f"⚠️ Λείπει η στήλη {c}. Skip.")
+                return self.filled_df
+
+        def to_num(s):
+            s = s.astype(str).str.strip().str.replace(",", ".", regex=False)
+            return pd.to_numeric(s, errors="coerce").fillna(0)
+
+        fat = to_num(self.filled_df["Fat"])
+        protein = to_num(self.filled_df["Protein"])
+        lactose = to_num(self.filled_df["Lactose"])
+
+        drop_mask = (fat == 0) & (protein == 0) & (lactose == 0)
+
+        if verbose:
+            print(f"🔍 Zero rows to drop: {int(drop_mask.sum())}")
+
+        self.filled_df = self.filled_df.loc[~drop_mask].copy()
+
+        if reset_index:
+            self.filled_df.reset_index(drop=True, inplace=True)
+
+        return self.filled_df
+
     def create_filled_dataframe(self) -> pd.DataFrame:
         """
         Δημιουργεί το πλήρες DataFrame με όλα τα δεδομένα
-        
+
         Returns:
             pd.DataFrame: Πλήρως συμπληρωμένο DataFrame
         """
         # Source - https://stackoverflow.com/a/30522778
         # Posted by miriamsimone, modified by community
         # Retrieved 2025-12-10, License - CC BY-SA 4.0
-        
+
         self.filled_df = pd.DataFrame(
             np.column_stack([
                 self.metadata['sample_ids'],
@@ -50,29 +84,29 @@ class OutputGenerator:
             ]),
             columns=config.TARGET_COLUMN_ORDER
         )
-        
+
         print(f"✅ Δημιουργήθηκε filled DataFrame με {len(self.filled_df)} γραμμές")
         return self.filled_df
     
     def break_into_parts(self) -> List[pd.DataFrame]:
         """
         Χωρίζει το DataFrame σε parts των 87 γραμμών
-        
+
         Returns:
             List[pd.DataFrame]: Λίστα με DataFrame parts
         """
         if self.filled_df is None:
             raise ValueError("Πρέπει να καλέσετε πρώτα create_filled_dataframe()")
-        
+
         chunks = [
-            self.filled_df.iloc[i:i+config.BATCH_SIZE] 
+            self.filled_df.iloc[i:i+config.BATCH_SIZE-1]
             for i in range(0, len(self.filled_df), config.BATCH_SIZE)
         ]
-        
+
         print(f"✅ Διαχωρισμός σε {len(chunks)} parts:")
         for idx, chunk in enumerate(chunks, 1):
             print(f"   Part {idx}: {len(chunk)} γραμμές")
-        
+
         return chunks
     
     def save_parts_to_csv(self):
@@ -128,7 +162,7 @@ class FinalOutputAssembler:
         first_file = True
         zero_block_index = 0
         
-        with open(self.output_path, "w", encoding="utf-8") as fout:
+        with open(self.output_path, "w", encoding="utf-8", newline='') as fout:
             for i, fname in enumerate(part_files):
                 part_path = os.path.join(self.parts_path, fname)
                 
@@ -146,7 +180,7 @@ class FinalOutputAssembler:
                 if i < len(part_files) - 1:
                     if zero_block_index < len(zero_dfs):
                         zero_df = zero_dfs[zero_block_index]
-                        zero_csv_string = zero_df.to_csv(header=False, index=False)
+                        zero_csv_string = zero_df.to_csv(header=True, index=False, lineterminator='')
                         fout.write(zero_csv_string)
                         zero_block_index += 1
                     else:
@@ -171,8 +205,8 @@ class FinalOutputAssembler:
             return sum(1 for _ in f)
 
 
-def generate_output(df: pd.DataFrame, metadata: dict, 
-                   zero_dfs: List[pd.DataFrame]) -> str:
+def generate_output(df, metadata, zero_dfs, drop_zero_nutrients: bool = True) -> str:
+
     """
     Wrapper function για πλήρη δημιουργία output
     
@@ -187,6 +221,8 @@ def generate_output(df: pd.DataFrame, metadata: dict,
     # Δημιουργία filled DataFrame
     generator = OutputGenerator(df, metadata)
     generator.create_filled_dataframe()
+    if drop_zero_nutrients:
+        generator.drop_zero_nutrient_rows_on_filled(reset_index=False, verbose=False)
     generator.save_parts_to_csv()
     
     # Συναρμολόγηση τελικού output
@@ -221,4 +257,5 @@ if __name__ == "__main__":
     
     generator = OutputGenerator(test_df, test_metadata)
     filled = generator.create_filled_dataframe()
+
     print(f"Created filled DataFrame with {len(filled)} rows")

@@ -1,30 +1,23 @@
+
 import os
-from pathlib import Path
 
-# Φάκελος ρίζας project (ένα επίπεδο πάνω από το /gui, /modules κλπ)
-APP_PATH = Path(__file__).resolve().parent  # αν το config.py είναι στη ρίζα
-# αν το config.py είναι μέσα σε /gui τότε θες: .parent.parent
-# Βασικά paths
+
+# ============================================================
+# ΒΑΣΙΚΕΣ ΔΙΑΔΡΟΜΕΣ - Windows Paths
+# ============================================================
+
 BASE_PATH = r"C:/excel"
-
-# output folder μέσα στο project (ασφαλές default)
-OUTPUT_PATH = r"C:/excel"
-
-# Files/folders
-PARTS_PATH = APP_PATH / "parts"
-ZERO_PATH = APP_PATH / "zero" / "zero.xlsx"
-FINAL_OUTPUT_PATH = OUTPUT_PATH + "\\" + "final.csv"
-
 ZERO_REMOTE_URL = (
     "https://qhlpulnlyvarhmckbelq.supabase.co/"
     "storage/v1/object/public/zero/zero.xlsx"
 )
-
 APP_ICON = "icon2.ico"
 
-# αν κάπου θες string και όχι Path:
-# str(FINAL_OUTPUT_PATH)
-
+# Υποφάκελοι
+CSV_PATH = os.path.join(BASE_PATH, "CSV")
+PARTS_PATH = os.path.join(CSV_PATH, "parts")
+ZERO_PATH = os.path.join(CSV_PATH, "zero", "zero.xlsx")
+FINAL_OUTPUT_PATH = os.path.join(CSV_PATH, "final.csv")
 
 # ============================================================
 # ΠΑΡΑΜΕΤΡΟΙ ΕΠΕΞΕΡΓΑΣΙΑΣ
@@ -52,7 +45,7 @@ COLUMN_RENAMES = {
 # ΠΑΡΑΜΕΤΡΟΙ ΧΡΟΝΙΣΜΟΥ
 # ============================================================
 
-BATCH_SIZE = 81
+BATCH_SIZE = 87
 T_SAMPLE_INCREMENT = 43
 T_ZERO_INCREMENT = 19
 ZERO_BLOCK_ROWS = 8            # Γραμμές ανά zero block
@@ -101,7 +94,11 @@ def validate_config():
             return False
     else:
         print(f"✅ BASE_PATH υπάρχει: {BASE_PATH}")
-
+    
+    if not os.path.exists(CSV_PATH):
+        print(f"   Δημιουργία CSV_PATH...")
+        os.makedirs(CSV_PATH, exist_ok=True)
+        print(f"✅ Δημιουργήθηκε: {CSV_PATH}")
     
     return True
 
@@ -111,6 +108,7 @@ def create_directory_structure():
     
     directories = [
         BASE_PATH,
+        CSV_PATH,
         PARTS_PATH,
         os.path.dirname(ZERO_PATH)
     ]
@@ -134,6 +132,7 @@ def print_config():
 
     print(f"APP_ICON:          {APP_ICON}")
     print(f"BASE_PATH:         {BASE_PATH}")
+    print(f"CSV_PATH:          {CSV_PATH}")
     print(f"PARTS_PATH:        {PARTS_PATH}")
     print(f"ZERO_PATH:         {ZERO_PATH}")
     print(f"FINAL_OUTPUT_PATH: {FINAL_OUTPUT_PATH}")
