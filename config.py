@@ -20,7 +20,7 @@ ZERO_REMOTE_URL = (
     "storage/v1/object/public/zero/zero.xlsx"
 )
 
-APP_ICON = "icon2.ico"
+APP_ICON = "assets\\ico\\icon2.ico"
 
 # αν κάπου θες string και όχι Path:
 # str(FINAL_OUTPUT_PATH)

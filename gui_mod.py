@@ -24,6 +24,8 @@ from gui.log import UILogger
 
 # Import tab modules
 from gui.tabs import LoadTab, SettingsTab, ProcessTab, ResultsTab
+from gui.gifs import GIF_LOAD, GIF_PROCESS, GIF_SUCCESS
+
 
 import config
 
@@ -140,8 +142,13 @@ class CSVLabGUI:
         self.main_area.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
         # --- Bottom navigation bar (sticky) ---
-        self.nav_frame = tk.Frame(self.root, bg="#34495e", height=44)
+        self.nav_frame = tk.Frame(self.root, bg="#34495e", height=100)
         self.nav_frame.pack(side=tk.BOTTOM, fill=tk.X)
+
+
+        self.nav_frame.grid_columnconfigure(0, weight=0)
+        self.nav_frame.grid_columnconfigure(1, weight=1)
+        self.nav_frame.grid_columnconfigure(2, weight=0)
 
         self.btn_prev = tk.Button(
             self.nav_frame, text="⬅ Προηγούμενο",
@@ -149,7 +156,7 @@ class CSVLabGUI:
             padx=14, pady=6, cursor="hand2",
             command=lambda: self._go_tab(-1)
         )
-        self.btn_prev.pack(side=tk.LEFT, padx=10, pady=6)
+        self.btn_prev.grid(row=0, column=0, padx=10, pady=6)
 
         self.btn_next = tk.Button(
             self.nav_frame, text="Επόμενο ➡",
@@ -157,7 +164,7 @@ class CSVLabGUI:
             padx=14, pady=6, cursor="hand2",
             command=lambda: self._go_tab(1)
         )
-        self.btn_next.pack(side=tk.RIGHT, padx=10, pady=6)
+        self.btn_next.grid(row=0, column=2, padx=10, pady=6)
 
         # Status bar
         status_frame = tk.Frame(self.root, bg='#34495e', height=30)
@@ -204,6 +211,9 @@ class CSVLabGUI:
         self.notebook.add(self.log_frame, text="🧾 Logs")
 
         self.logger = UILogger(self.log_text, status_label=self.status_bar)
+
+
+
 
     def _open_settings(self):
         """Άνοιγμα Settings Window"""

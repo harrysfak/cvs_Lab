@@ -21,6 +21,8 @@ from modules.zero_manager import prepare_zero_data
 from modules.output_generator import generate_output
 from modules.missing_row import MissingRowHandler
 from gui.missing_aa_dialog import ask_values_for_missing_aa
+from gui.gifs import GIF_SUCCESS
+
 
 
 class ProcessTab:
@@ -86,6 +88,10 @@ class ProcessTab:
         self.process_btn.config(state=tk.DISABLED)
         self.progress.start()
         self.app.processing_start_time = datetime.now()
+
+        # όταν ξεκινά processing -> δείξε processing gif
+        from gui.gifs import GIF_PROCESS
+        self.app.status_slot.show_gif(GIF_PROCESS, size=(32, 32), delay=60)
 
         thread = threading.Thread(target=self._process_data)
         thread.daemon = True
@@ -180,6 +186,8 @@ class ProcessTab:
 
     def _continue_processing(self):
         """Συνέχεια επεξεργασίας"""
+        success = False
+
         try:
             # ΒΗΜΑ 2: Επεξεργασία (ΧΩΡΙΣ drop_zero)
             self.app.logger.info("⚙️ Επεξεργασία δεδομένων...")
@@ -228,6 +236,10 @@ class ProcessTab:
             self.app.logger.info("💾 Δημιουργία τελικού αρχείου...")
             final_path = generate_output(self.app.processed_df, metadata, zero_dfs)
             self.app.last_output_path = final_path
+            # ✅ Success animation/icon στο κάτω κέντρο
+            success = True
+            from gui.gifs import GIF_SUCCESS
+            self.app.root.after(0, lambda: self.app.status_slot.show_success_for(GIF_SUCCESS, ms=1500, size=(32, 32)))
 
             # Telemetry
             duration = (datetime.now() - self.app.processing_start_time).total_seconds()
@@ -244,6 +256,8 @@ class ProcessTab:
         finally:
             self.app.root.after(0, self.progress.stop)
             self.app.root.after(0, lambda: self.process_btn.config(state=tk.NORMAL))
+            if not success:
+                self.app.root.after(0, self.app.status_slot.clear)
 
     def get_frame(self):
         """Returns the frame"""
