@@ -1,7 +1,7 @@
 {
-    "total_files_processed": 23,
-    "total_sessions": 39,
-    "last_used": "2025-12-25T00:32:12.619090",
+    "total_files_processed": 27,
+    "total_sessions": 48,
+    "last_used": "2025-12-25T02:01:43.353109",
     "first_used": "2025-12-24T10:45:27.520037",
     "processing_history": [
         {
@@ -141,6 +141,30 @@
             "filename": "1605-6",
             "samples": 232,
             "duration_sec": 0.166364
+        },
+        {
+            "timestamp": "2025-12-25T01:10:22.499487",
+            "filename": "1605-6",
+            "samples": 233,
+            "duration_sec": 9.752252
+        },
+        {
+            "timestamp": "2025-12-25T01:16:09.255693",
+            "filename": "2711-6",
+            "samples": 29,
+            "duration_sec": 0.135957
+        },
+        {
+            "timestamp": "2025-12-25T01:22:04.395422",
+            "filename": "2711-6",
+            "samples": 29,
+            "duration_sec": 0.144657
+        },
+        {
+            "timestamp": "2025-12-25T01:41:07.657287",
+            "filename": "1605-6",
+            "samples": 233,
+            "duration_sec": 18.627599
         }
     ],
     "errors": [

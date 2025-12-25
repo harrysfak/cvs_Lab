@@ -81,7 +81,6 @@ class ResultsTab:
 
     def open_output_folder(self):
         import os
-        import subprocess
         from tkinter import messagebox
 
         path = getattr(self.app, "last_output_path", None)
@@ -91,8 +90,12 @@ class ResultsTab:
             return
 
         folder = os.path.dirname(path)
-        subprocess.Popen(f'explorer "{folder}"')
+        try:
+            os.startfile(folder)  # ✅ ανοίγει Explorer στον φάκελο
+            print("CLICK open_output_folder")
 
+        except Exception as e:
+            messagebox.showerror("Σφάλμα", f"Δεν άνοιξε ο φάκελος:\n{e}")
 
     def open_final_file(self):
         import os

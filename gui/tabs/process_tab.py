@@ -9,6 +9,8 @@ import sys
 import os
 from datetime import datetime
 
+import pandas as pd
+
 parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
@@ -18,6 +20,7 @@ from modules.time_handler import TimeHandler, MetadataGenerator
 from modules.zero_manager import prepare_zero_data
 from modules.output_generator import generate_output
 from modules.missing_row import MissingRowHandler
+from gui.missing_aa_dialog import ask_values_for_missing_aa
 
 
 class ProcessTab:
@@ -52,8 +55,8 @@ class ProcessTab:
         # Progress
         self.progress = ttk.Progressbar(self.frame, mode='indeterminate', length=500)
         self.progress.pack(pady=10)
-        
-        #LOG LABELS
+
+        # LOG LABELS
         self.status_label = tk.Label(
             self.frame,
             text="Αναμονή για εκτέλεση",
@@ -67,8 +70,8 @@ class ProcessTab:
             self.status_label.config(text=text, fg=color)
             self.app.update_status(text)
             self.app.log(text)
-        self.app.root.after(0, ui)
 
+        self.app.root.after(0, ui)
 
     def start_processing(self):
         """Έναρξη επεξεργασίας"""
@@ -88,7 +91,61 @@ class ProcessTab:
         thread.daemon = True
         thread.start()
 
+    def _handle_missing_aa_ui(self, missing_list):
+        # value_provider για τον handler σου
+        def value_provider(aa: int):
+            return ask_values_for_missing_aa(self.app.root, aa, MissingRowHandler.validate_input)
+
+        old_df = self.app.excel_df
+        new_df = MissingRowHandler.insert_missing_aa_rows(old_df, value_provider, col="a/a")
+
+        # Cancel => rollback => ο handler επιστρέφει το ίδιο df object
+        if new_df is old_df:
+            self.set_status("⛔ Ακυρώθηκε η συμπλήρωση. Δεν συνεχίζω.", "#c0392b")
+            return
+
+        self.app.excel_df = new_df
+        self.set_status("✅ Συμπληρώθηκαν τα missing a/a. Ξεκινάω ξανά...", "#27ae60")
+
+        # ξαναξεκίνα processing (σε thread)
+        self.process_btn.config(state=tk.DISABLED)
+        self.progress.start()
+        t = threading.Thread(target=self._process_data, daemon=True)
+        t.start()
+
     def _process_data(self):
+        # =================================================
+        # 📊 Έλεγχος επαναλαμβανόμενων γραμμών (replicates)
+        # =================================================
+        try:
+            aa_col = "a/a"
+            df = self.app.excel_df
+
+            if aa_col in df.columns:
+                aa_numeric = pd.to_numeric(df[aa_col], errors="coerce").dropna()
+
+                if not aa_numeric.empty:
+                    last_aa = int(aa_numeric.max())
+                    total_rows = len(df)
+                    repeats = total_rows - last_aa
+
+                    if repeats > 0:
+                        self.app.logger.info(
+                            f"🔁 Επαναλαμβανόμενες γραμμές: {repeats} "
+                            f"(τελευταίο a/a={last_aa}, σύνολο γραμμών={total_rows})"
+                        )
+                    else:
+                        self.app.logger.info(
+                            f"✅ Καμία επαναλαμβανόμενη γραμμή "
+                            f"(τελευταίο a/a={last_aa}, σύνολο γραμμών={total_rows})"
+                        )
+        except Exception as e:
+            self.app.logger.warn(f"⚠️ Αδυναμία υπολογισμού επαναλαμβανόμενων: {e}")
+
+        # =================
+        # ΑΡΧΗ ΕΠΕΞΕΡΓΑΣΙΑΣ
+        # =================
+
         try:
             self.set_status("⚡ Έναρξη επεξεργασίας...", "#2980b9")
 
@@ -96,10 +153,19 @@ class ProcessTab:
             missing_rows = MissingRowHandler.find_missing_aa_rows(self.app.excel_df)
 
             if missing_rows:
-                self.app.logger.warn(f"⚠️ Βρέθηκαν {len(missing_rows)} γραμμές με missing a/a")
+                self.app.logger.warn(f"⚠️ Λείπουν a/a: {missing_rows}")
+                self.set_status("⛔ Λείπουν a/a – συμπλήρωσέ τα για να συνεχίσω.", "#c0392b")
 
+                # σταμάτα UI indicators τώρα
+                self.app.root.after(0, self.progress.stop)
+                self.app.root.after(0, lambda: self.process_btn.config(state=tk.NORMAL))
+
+                # άνοιξε διαλόγους στο UI thread
+                self.app.root.after(0, self._handle_missing_aa_ui, missing_rows)
+                return
+
+            # Μόνο αν ΔΕΝ υπάρχουν missing συνεχίζεις
             self._continue_processing()
-
             self.set_status("✅ Ολοκληρώθηκε!", "#27ae60")
 
         except Exception as e:
@@ -111,7 +177,6 @@ class ProcessTab:
         finally:
             self.app.root.after(0, self.progress.stop)
             self.app.root.after(0, lambda: self.process_btn.config(state=tk.NORMAL))
-
 
     def _continue_processing(self):
         """Συνέχεια επεξεργασίας"""
@@ -163,7 +228,6 @@ class ProcessTab:
             self.app.logger.info("💾 Δημιουργία τελικού αρχείου...")
             final_path = generate_output(self.app.processed_df, metadata, zero_dfs)
             self.app.last_output_path = final_path
-
 
             # Telemetry
             duration = (datetime.now() - self.app.processing_start_time).total_seconds()

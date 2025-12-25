@@ -52,12 +52,7 @@ class MissingRowHandler:
 
     @staticmethod
     def _calculate_auto_fields(row):
-        """
-        Υπολογίζει αυτόματα TS και SNF.
-        """
-        fat = float(row.get("fat", 0.0))
-        protein = float(row.get("proteine", 0.0))
-        lactose = float(row.get("lactose ", 0.0))
+
         fpd = float(row.get("freeze point", 0.0))
 
         return {
@@ -106,7 +101,7 @@ class MissingRowHandler:
         if df is None or col not in df.columns:
             return df
 
-        missing = MissingRowHandler.find_missing_aa_numbers(df, col)
+        missing = MissingRowHandler.find_missing_aa_rows(df, col)
         if not missing:
             return df
 

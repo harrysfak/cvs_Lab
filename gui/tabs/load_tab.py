@@ -93,11 +93,31 @@ class LoadTab:
             self.app.csv_first_4 = protocol[:4]
             self.app.dash_part = result.group()
 
+            # Check for repeats
+            df = self.app.excel_df
+            aa_col = "a/a"
+
+            last_aa = "—"
+            repeats = "—"
+
+            if aa_col in df.columns:
+                aa_numeric = pd.to_numeric(df[aa_col], errors="coerce").dropna()
+                if not aa_numeric.empty:
+                    last_aa = int(aa_numeric.max())
+                    repeats = len(df) - last_aa
+
             # Display info
             info = f"""
-Αρχείο: {protocol}.xls
-Γραμμές: {len(self.app.excel_df)}
-Στήλες: {', '.join(self.app.excel_df.columns.tolist())}
+            Αρχείο: {protocol}.xls
+
+            Γραμμές: {len(df)}
+            Τελευταίο a/a: {last_aa}
+            Επαναλαμβανόμενες γραμμές: {repeats}
+
+            Στήλες:
+            {', '.join(df.columns.tolist())}
+            
+            Συνέχεια ρυθμίσεων ===>
             """
 
             self.file_info_text.config(state=tk.NORMAL)

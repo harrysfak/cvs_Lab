@@ -1,6 +1,28 @@
+'''
+config_edit.py
+'''
 import importlib.util
+import sys
 from pathlib import Path
+import shutil, os
 
+def bundled_path(filename: str) -> Path:
+    import sys
+    base = Path(getattr(sys, "_MEIPASS", Path.cwd()))
+    return base / filename
+
+def ensure_config_exists(dst: Path):
+    if not dst.exists():
+        src = bundled_path("config.py")
+        if src.exists():
+            shutil.copy2(src, dst)
+        else:
+            raise FileNotFoundError("Δεν βρέθηκε bundled config.py για αρχική αντιγραφή.")
+
+def get_config_path_portable() -> Path:
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent / "config.py"
+    return (Path(__file__).resolve().parent.parent / "config.py")  # όπως το είχες για dev
 
 def load_config_module(config_path: Path):
     spec = importlib.util.spec_from_file_location("app_config", str(config_path))
@@ -8,23 +30,21 @@ def load_config_module(config_path: Path):
     spec.loader.exec_module(module)
     return module
 
+def to_bool(v):
+    if isinstance(v, bool):
+        return v
+    if isinstance(v, str):
+        return v.strip().lower() in ("1", "true", "yes", "on")
+    return bool(v)
 
-def find_config_previous_folder(start_path, filename="config.py"):
-    # start_path = το αρχείο που τρέχει (π.χ. gui/config_edit.py)
-    start = Path(start_path).resolve()
-    candidate = start.parent.parent / filename  # ακριβώς 1 φάκελο πάνω από το gui/
-
-    if candidate.exists():
-        return candidate
-
-    raise FileNotFoundError(f"{filename} δεν βρέθηκε στον προηγούμενο φάκελο: {candidate.parent}")
 
 
 class ConfigEditor:
     """Κλάση για επεξεργασία του config.py"""
 
     def __init__(self):
-        self.config_path = find_config_previous_folder(__file__)
+        self.config_path = get_config_path_portable()
+        ensure_config_exists(self.config_path)
         self.config_values = {}
         self.load_config()
 
@@ -80,8 +100,9 @@ class ConfigEditor:
                 elif s.startswith("DEFAULT_REP"):
                     new_lines.append(f'DEFAULT_REP = {int(new_values["DEFAULT_REP"])}\n')
 
+
                 elif s.startswith("DROP_ZERO_NUTRIENTS"):
-                    new_lines.append(f'DROP_ZERO_NUTRIENTS = {bool(new_values["DROP_ZERO_NUTRIENTS"])}\n')
+                    new_lines.append(f'DROP_ZERO_NUTRIENTS = {to_bool(new_values["DROP_ZERO_NUTRIENTS"])}\n')
 
                 else:
                     new_lines.append(line)
