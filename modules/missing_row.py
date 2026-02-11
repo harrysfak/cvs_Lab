@@ -37,11 +37,12 @@ class MissingRowHandler:
         """
         Δημιουργεί νέα γραμμή από user input.
         user_input dict:
-            {"aa": int, "Fat": float, "Protein": float, "Lactose": float, "FPD": float}
+            {"aa": int,+pH:float+, "Fat": float, "Protein": float, "Lactose": float, "FPD": float}
         """
         new_row = {
             "a/a": user_input.get("aa", ""),
             "fat": float(user_input.get("fat", 0.0)),
+            "pH": float(user_input.get("pH", 0.0)),
             "proteine": float(user_input.get("proteine", 0.0)),
             "lactose ": float(user_input.get("lactose ", 0.0)),
             "freeze point": float(user_input.get("freeze point", 0.0)),
@@ -86,6 +87,10 @@ class MissingRowHandler:
                 return False, None, "Protein είναι πολύ υψηλό (>6%)"
             if field_name == "lactose " and parsed > 8:
                 return False, None, "Lactose είναι πολύ υψηλό (>8%)"
+            if field_name == "pH":
+                if parsed < 3 or parsed > 6:
+                    return False, None, "pH πρέπει να είναι μεταξύ 3 και 6"
+                return True, parsed, ""
 
             return True, parsed, ""
 
@@ -99,14 +104,14 @@ class MissingRowHandler:
         """
         Συμπληρώνει τα κενά a/a με νέες γραμμές.
 
-        value_provider: function(aa:int) -> dict {"Fat","Protein","Lactose","FPD"} ή None αν Cancel
+        value_provider: function(aa:int) -> dict {+"pH"+"Fat","Protein","Lactose","FPD"} ή None αν Cancel
 
         Cancel σε οποιοδήποτε popup => επιστρέφει το αρχικό df (rollback).
         """
         if df is None or col not in df.columns:
             return df
 
-        missing = MissingRowHandler.find_missing_aa_numbers(df, col)
+        missing = MissingRowHandler.find_missing_aa_rows(df, col)
         if not missing:
             return df
 

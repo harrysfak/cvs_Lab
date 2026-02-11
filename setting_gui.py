@@ -11,6 +11,8 @@ from datetime import datetime
 import subprocess
 import random
 
+from modules.pH_handler import PHHandler
+
 # Προσθήκη του parent directory στο path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -414,16 +416,23 @@ class CSVLabGUI:
         self.progress.start()
         self.processing_start_time = datetime.now()
 
+
         thread = threading.Thread(target=self._process_data)
         thread.daemon = True
         thread.start()
 
     def _process_data(self):
+
+        filename = f"{self.csv_first_4}{self.dash_part}"
+        ph_out = os.path.join(config.BASE_PATH, "output", f"{filename}_PH_FORM.xlsx")
+
         """Επεξεργασία"""
         try:
             self._log("⚡ Έναρξη...")
 
             self.processed_df = process_data(self.excel_df)
+
+
 
             time_handler = TimeHandler(len(self.processed_df))
             date = self.date_entry.get().strip()
@@ -447,6 +456,22 @@ class CSVLabGUI:
                 zero_dfs,
                 drop_zero_nutrients=self.drop_zero_var.get()
             )
+            self._log("Columns: " + ", ".join(self.processed_df.columns))
+
+            # δείξε 10 πρώτες γραμμές
+            self._log("HEAD:\n" + self.processed_df.head(10).to_string())
+
+            # δείξε ακριβώς τη γραμμή του a/a=190 (αν υπάρχει)
+            row_190 = self.processed_df[self.processed_df["a/a"].astype("Int64") == 190]
+            self._log("ROW a/a=190:\n" + row_190.to_string(index=False))
+
+            paths = PHHandler(self.processed_df).fill_form(
+                template_path=config.PH_FORM_TEMPLATE_PATH,
+                out_path=ph_out,
+                write_aa=True,
+                strict_missing_ph=True
+            )
+
 
             # Calculate duration
             duration = (datetime.now() - self.processing_start_time).total_seconds()

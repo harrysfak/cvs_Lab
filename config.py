@@ -5,15 +5,16 @@ from pathlib import Path
 APP_PATH = Path(__file__).resolve().parent  # αν το config.py είναι στη ρίζα
 # αν το config.py είναι μέσα σε /gui τότε θες:.parent.parent
 # Βασικά paths
-BASE_PATH = r"C:/excel"
+BASE_PATH = r"C:/Users/mpamp/Υπολογιστής/code/git/cvs_Lab8"
 
 # output folder μέσα στο project (ασφαλές default)
-OUTPUT_PATH = r"C:/excel"
+OUTPUT_PATH = r"C:/Users/mpamp/Υπολογιστής/code/git/cvs_Lab8"
 
 # Files/folders
 PARTS_PATH = APP_PATH / "parts"
 ZERO_PATH = APP_PATH / "zero" / "zero.xlsx"
 FINAL_OUTPUT_PATH = OUTPUT_PATH + "\\" + "final.csv"
+PH_FORM_TEMPLATE_PATH = APP_PATH / "ph_template.xlsx"
 
 ZERO_REMOTE_URL = (
     "https://qhlpulnlyvarhmckbelq.supabase.co/"
@@ -31,11 +32,11 @@ APP_ICON = "icon2.ico"
 # ============================================================
 
 # Στήλες για έλεγχο δεκαδικών
-TWO_DECIMAL_COLS = ["Fat", "Protein", "Lactose"]
+TWO_DECIMAL_COLS = ["PH", "Fat", "Protein", "Lactose"]
 FOUR_DECIMAL_COLS = ["FPD"]
 
 # Στήλες προς διαγραφή
-COLS_TO_DELETE = ["PH", "syal", "som cells", "water", "omx", "antibiotics"]
+COLS_TO_DELETE = ["syal", "som cells", "water", "omx", "antibiotics"]
 
 # Αφαίρεση γραμμών με μηδενικά nutrients
 DROP_ZERO_NUTRIENTS = True
@@ -45,7 +46,8 @@ COLUMN_RENAMES = {
     'proteine': 'Protein',
     'fat': 'Fat',
     'lactose': 'Lactose',
-    'freeze point': 'FPD'
+    'freeze point': 'FPD',
+    "PH": "pH"
 }
 
 # ============================================================
